@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "453421272103",
+    "project_id": "divamobile-77c11",
+    "storage_bucket": "divamobile-77c11.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:453421272103:android:ab06a439168829c7749202",
+        "android_client_info": {
+          "package_name": "com.exemple.divamobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "453421272103-ratde0lq4pcfg8q48uobiplk13g8lhrf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjUPnOyxr5qskMDmdYUBN1krLKnQIELQQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "453421272103-ratde0lq4pcfg8q48uobiplk13g8lhrf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
