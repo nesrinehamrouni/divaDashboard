@@ -46,7 +46,7 @@ class _FirstScreenState extends State<FirstScreen> {
                     color: backColor,
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.only(bottom: 40.0),
-                      child: Login( isSmall:ResponsiveWidget.isSmallScreen(context)),
+                      child: LoginBtn( isSmall:ResponsiveWidget.isSmallScreen(context)),
                     ),
                   ),
                  // Spacer() ,                // ),

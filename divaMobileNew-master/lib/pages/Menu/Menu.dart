@@ -3,7 +3,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:blurry_modal_progress_hud/blurry_modal_progress_hud.dart';
+import 'package:divamobile/Notification/notif.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -41,52 +43,22 @@ class _MenuState extends State<Menu> {
 
     getDOS_ETB();
     getAllnotif();
-   // getNotif();
-   //  /********************notification  ************************/
-   //  Notif_Function.notify();
-   //
-   // searchContenuData();
-   // Global.set_activate_Stat(false);
-   //
-   //  firebaseMessaging.requestNotificationPermissions(
-   //
-   //      const IosNotificationSettings(sound: true, badge: true, alert: true)
-   //  );
-   //
-   //   firebaseMessaging.configure();
 
+    // Initializing notification counter
+    SharedPreferences.getInstance().then((prefs) {
+      setState(() {
+        NotificationController.notificationCounter = prefs.getInt('notification_counter') ?? 0;
+      });
+    });
 
-
-
-    // AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
-    //   if(!isAllowed){
-    //     AwesomeNotifications().requestPermissionToSendNotifications();
-    //
-    //   }
-    // });
-    //
-    // Timer timer = Timer.periodic(Duration(minutes: 1), (timer) async {
-    //   // call your function here
-    //   await NotificationService.showNotification(
-    //     title: "Notification test ",
-    //     body: 'LIBL1',
-    //     payload: {
-    //       "navigate": "test",
-    //
-    //
-    //     },
-    //
-    //
-    //   );
-    // });
-    //
-    // // Cancel the timer after 5 minutes
-    // Timer(Duration(minutes: 5), () {
-    //   timer.cancel();
-    // });
-
+     //listener to update the notification badge
+    NotificationController.notificationListener = () {
+      setState(() {});
+    };
 
   }
+
+  
   Future<void> getNotif() async {
     Notif_Function.notify();
   }
@@ -182,29 +154,30 @@ class _MenuState extends State<Menu> {
                        _shownotif();
                      });
                    }),
-                   counter != 0 ? new Positioned(
-                     right: 11,
-                     top: 11,
-                     child: new Container(
-                       padding: EdgeInsets.all(2),
-                       decoration: new BoxDecoration(
-                         color: Colors.red,
-                         borderRadius: BorderRadius.circular(6),
-                       ),
+                   if (NotificationController.notificationCounter != 0)
+                      Positioned(
+                        right: 11,
+                        top: 11,
+                        child: Container(
+                          padding: EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
                        constraints: BoxConstraints(
                          minWidth: 14,
                          minHeight: 14,
                        ),
                        child: Text(
-                         '$counter',
-                         style: TextStyle(
-                           color: Colors.white,
-                           fontSize: 8,
-                         ),
-                         textAlign: TextAlign.center,
-                       ),
+                            '${NotificationController.notificationCounter}',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                      ),
-                   ) : new Container()
+                   )
                  ],
                ),
 
@@ -557,46 +530,82 @@ if (title == "Consultation Pièces Fournisseur") {
 
 
 
-  var List_notif = [];
+var List_notif = [];
 
 
-  Future getAllnotif()  async {
-setState(() {
-  loadingNotif=true;
-});
-    String myUrl = BaseUrl.get_Notification;
-    http.post(Uri.parse(myUrl),
-        headers: {
-          HttpHeaders.authorizationHeader: 'Bearer ${Utils.getToken()}',
-        },
-        body: {
+//   Future getAllnotif()  async {
+// setState(() {
+//   loadingNotif=true;
+// });
+  
+//     http.post(Uri.parse(BaseUrl.Notify),
+//         headers: {
+//           HttpHeaders.authorizationHeader: 'Bearer ${Utils.getToken()}',
+//         },
+//         body: {
 
 
-          "DOS":Global.getDOS(),
-          "date":DateTime.now().toString(),
+//           "DOS":Global.getDOS(),
+//           "date":DateTime.now().toString(),
 
-        }).then((response) {
-      print('Response status : ${response.statusCode}');
-      print('Response body notif : ${response.body}');
+//         }).then((response) {
+//       print('Response status : ${response.statusCode}');
+//       print('Response body notif : ${response.body}');
 
-      if (response.statusCode == 200) {
-        var jsonData = json.decode(response.body);
-        setState(() {
-          List_notif = jsonData;
-          //print(SousTypeCLItemlist);
-          counter = List_notif.length;
-          print("counter == ${counter}");
-        });
+//       if (response.statusCode == 200) {
+//         var jsonData = json.decode(response.body);
+//         setState(() {
+//           List_notif = jsonData;
+//           //print(SousTypeCLItemlist);
+//           counter = List_notif.length;
+//           print("counter == ${counter}");
+//         });
 
-      }
-      setState(() {
-        loadingNotif=false;
-      });
+//       }
+//       setState(() {
+//         loadingNotif=false;
+//       });
+//     });
+
+//   }
+
+
+// }
+
+
+ Future<void> getAllnotif() async {
+    setState(() {
+      loadingNotif = true;
     });
 
+    final response = await http.post(
+      Uri.parse(BaseUrl.Notify),
+      headers: {
+        HttpHeaders.authorizationHeader: 'Bearer ${Utils.getToken()}',
+      },
+      body: {
+        "DOS": Global.getDOS(),
+        "date": DateTime.now().toString(),
+      },
+    );
+
+    print('Response status: ${response.statusCode}');
+    print('Response body notif: ${response.body}');
+
+    if (response.statusCode == 200) {
+      var jsonData = json.decode(response.body);
+      setState(() {
+        List_notif = jsonData;
+        counter = List_notif.length;
+        print("counter == $counter");
+      });
+    }
+
+    setState(() {
+      loadingNotif = false;
+    });
   }
-
-
 }
+
 
 

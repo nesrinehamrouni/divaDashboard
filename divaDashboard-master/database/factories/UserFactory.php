@@ -23,9 +23,9 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->unique()->phoneNumber(),
             'email_verified_at' => now(),
-            'device_key' => "3base64:3TKSIeNLK+cSbFTTA5oktOm4n1zav0sFj5kzdaJx3EY=",
+            'device_key' => "dGyzdMaWQpSB_OOqQIL4rw:APA91bEjoRtwcNlMdoIhYHkzCqPBsyXC9y5USiN_bT3KmFYzyh4P45dUc2uBjwNXnR6W2f1Mn7jkGvEGyyByKxjR2W0_qpGDlSI-NrlYIDf5gTh_jFbhfMYasCA32zDvjPCTwdJLZstv",
             'delay' => rand(0,5),
-            'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
+            'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 
             'remember_token' => Str::random(10),
         ];
     }

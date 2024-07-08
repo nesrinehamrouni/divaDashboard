@@ -36,7 +36,7 @@ Route::post('auth/register',[AuthController::class,'register']);
 Route::post('auth/login',[AuthController::class,'login']);
 Route::post('auth/verify', [VerificationmailController::class,'verifyCode']);
 
-Route::get('notify', [NotificationController::class,'testqueues']);
+Route::post('notify', [NotificationController::class,'testqueues']);
 
 Route::post("ChiffreAffaire", [ChiffreAffaireController::class,'list']);
 

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 use App\Models\User;
 use App\Mail\VerificationCodeMail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -26,17 +28,24 @@ class AuthController extends Controller{
             'email' => $attrs['email'],
             'phone' => $attrs['phone'],
             'password' => bcrypt($attrs['password']),
+            'remember_token' => Str::random(10) // Initialize with a random string first
         ]);
+    
+        // Generate token
+        $token = $user->createToken('secret')->plainTextToken;
+    
+        // Update remember_token field with the generated token
+        $user->update(['remember_token' => $token]);
     
         $verificationCode = $user->generateVerificationCode();
         Mail::to($user->email)->send(new VerificationCodeMail($user, $verificationCode));
 
+        
     // Return response
     return response()->json([
         'message' => 'User registered successfully. Please check your email for the verification code.',
         'verification_code' => $verificationCode,
         'user' => $user, 
-        'token' => $user->createToken('secret')->plainTextToken
     ], 200);
 }
 

@@ -1,4 +1,6 @@
-import 'package:divamobile/Notification/notification_service.dart';
+import 'package:divamobile/Notification/notif.dart';
+import 'package:divamobile/firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,9 +10,17 @@ import './pages/Menu/Menu.dart';
 import './pages/splash_screen.dart';
 
 
-Future<void> main() async {
-  // Always initialize Awesome Notifications
-  await NotificationService.initializeNotification();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Initialize notifications
+  final notificationSetup = NotificationSetUp();
+  await notificationSetup.initializeNotification();
+
   runApp(MyApp());
 }
 
@@ -26,6 +36,7 @@ class MyApp extends StatelessWidget {
   Color _primaryColor = HexColor('#44596c');
   Color _accentColor = Color(0xFF2f3b46);
   // This widget is the root of your application.
+  
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(

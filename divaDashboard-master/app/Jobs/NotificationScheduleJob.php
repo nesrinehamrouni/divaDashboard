@@ -9,13 +9,11 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Http\Controllers\NotificationController;
+use Illuminate\Support\Facades\LOG;
 
 class NotificationScheduleJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-
-
      /**
      * The title of the notification.
      *
