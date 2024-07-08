@@ -1,37 +1,51 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Jobs\NotificationScheduleJob;
+use Google\Client as GoogleClient;
 
 class NotificationController extends Controller
 {
-    static public function notify($title, $body, $device_key){
-        $url ="https://fcm.googleapis.com/fcm/send";
-        $serverKey= env('serverKey', 'sync');
+    static public function notify($title, $body, $device_key)
+    {
+        $url = "https://fcm.googleapis.com/v1/projects/laravelnotif-ec82d/messages:send";
+        $credentialsFilePath = "public/json/laravelnotif-ec82d-5ce5b0db9483.json";
+        $client = new GoogleClient();
+        $client->setAuthConfig($credentialsFilePath);
+        $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
+        $client->refreshTokenWithAssertion();
+        $token = $client->getAccessToken();
+        $access_token = $token['access_token'];
 
-        $dataArr = [
-            "click_action" => "FLUTTER_NOTIFICATION_CLICK",
-            "status" => "done",
-        ];
-
-        $data=[
-            "registration_ids" => $device_key,
-            "notification" => [
-                "title" => $title,
-                "body" => $body,
-                "sound" => "default",
-            ],
-            "data" => $dataArr,
-            "priority" => "high",
+        $data = [
+            "message" => [
+                "token" => $device_key,
+                "notification" => [
+                    "title" => $title,
+                    "body" => $body,
+                ],
+                "data" => [
+                    "click_action" => "FLUTTER_NOTIFICATION_CLICK",
+                    "status" => "done",
+                ],
+                "android" => [
+                    "priority" => "high",
+                    "notification" => [
+                        "sound" => "default"
+                    ]
+                ]
+            ]
         ];
 
         $encodeData = json_encode($data);
-        $headers=[
-            "Authorization: key=".$serverKey,
-            "Content-Type: application/json",
+        $headers = [
+            "Authorization: Bearer $access_token",
+            'Content-Type: application/json'
         ];
 
         $ch = curl_init();
@@ -46,6 +60,7 @@ class NotificationController extends Controller
         curl_setopt($ch, CURLOPT_POSTFIELDS, $encodeData);
 
         $result = curl_exec($ch);
+        Log::info($result);
 
         if ($result === FALSE) {
             return [
@@ -62,21 +77,20 @@ class NotificationController extends Controller
             "r" => $result,
             "success" => true,
         ];
-
     }
 
-    public function testqueues(Request $request){
+    public function testqueues(Request $request)
+    {
         $users = User::whereNotNull('device_key')->whereNotNull('delay')->get();
-
+        Log::info('Sending notifications to user');
         foreach ($users as $user) {
             dispatch(
                 new NotificationScheduleJob(
                     $user->nom,
-                    $user->prenom,
                     $user->email,
                     $user->device_key,
                 )
-            )->delay(now()->addMinutes($user->delay)) ;
+                )->delay(now()->addSeconds($user->delay));
         }
     }
 }
