@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+
 import '../Api.dart';
 import '../My_globals.dart';
 import '../Utils.dart';
@@ -20,8 +21,7 @@ class Notif_Function  {
 
     var List_notif = [];
 
-    String myUrl = BaseUrl.get_Notification;
-    http.post(Uri.parse(myUrl),
+    http.post(Uri.parse(BaseUrl.Notify),
         headers: {
           HttpHeaders.authorizationHeader: 'Bearer ${Utils.getToken()}',
         },

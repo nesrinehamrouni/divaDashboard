@@ -18,7 +18,7 @@ abstract class Global {
     static int NB_stock = 0;
 
     // static String? server_api_key = "";
-    static String URL = "192.168.137.89";
+    static String URL = "192.168.1.6:8000";
 
     static String getURL() {
       return URL;

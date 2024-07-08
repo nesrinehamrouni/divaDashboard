@@ -1,266 +1,253 @@
-
 import 'dart:convert';
 
-import 'package:divamobile/constants.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../common/theme_helper.dart';
 import '../../../../pages/widgets/header_widget.dart';
 import '../../Api.dart';
-import '../../Utils.dart';
-import '../Menu/Menu.dart';
 import '../registration_page.dart';
 
-
-class Login extends StatefulWidget{
-  final bool isSmall ;
-  const Login({Key? key, required this.isSmall}): super(key:key);
+class LoginBtn extends StatefulWidget {
+  final bool isSmall;
+  const LoginBtn({Key? key, required this.isSmall}) : super(key: key);
 
   @override
-  _LoginState createState() => _LoginState();
+  _LoginBtnState createState() => _LoginBtnState();
 }
 
-class _LoginState extends State<Login>{
+class _LoginBtnState extends State<LoginBtn> {
   double _headerHeight = 250;
   final _formKey = GlobalKey<FormState>();
-  TextEditingController _passwordController = TextEditingController();
-  TextEditingController _UserXController = TextEditingController();
-  bool _passwordVisible = true ;
-  bool isLoading = false;
+  TextEditingController passwordController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  bool _passwordVisible = true;
+  bool _isLoading = false;
 
-  
+Future<void> _login() async {
+    final String email = emailController.text;
+    final String password = passwordController.text;
+
+    print('Attempting login with email: $email and password: $password');
+
+    try {
+      print("Before HTTP POST request");
+      final response = await http.post(
+        Uri.parse(BaseUrl.Login),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'email': email,
+          'password': password,
+        }),
+      );
+      print("After HTTP POST request");
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      final responseBody = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        print('Login successful');
+        Fluttertoast.showToast(
+          msg: 'Login successful',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+        );
+        // Navigate to menu page
+        Navigator.pushReplacementNamed(context, '/Menu');
+      } else if (response.statusCode == 401) {
+        print('Login failed: Incorrect email or password');
+        Fluttertoast.showToast(
+          msg: 'Incorrect email or password',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+        );
+      } else if (response.statusCode == 404) {
+        print('Login failed: User does not exist');
+        Fluttertoast.showToast(
+          msg: 'User does not exist',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+        );
+      } else if (response.statusCode == 400) {
+        print('Login failed: Bad request');
+        Fluttertoast.showToast(
+          msg: 'Bad request',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+        );
+      } else {
+        print('Login failed with message: ${responseBody['message']}');
+        Fluttertoast.showToast(
+          msg: responseBody['message'],
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+        );
+      }
+    } catch (e) {
+      print('Login error: $e');
+      Fluttertoast.showToast(
+        msg: 'Server error: $e',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _handleLogin() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+      await _login();
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
-
-    return
-     isLoading ? Center(child:CircularProgressIndicator(),)
-    :Column(
-        children: [
-          widget.isSmall ? Container(
-            height: _headerHeight,
-            child: HeaderWidget(_headerHeight, true, Icons.login_rounded), //let's create a common header widget
-          ):Container(),
-          SafeArea(
-            child: Center(
-              child: Container(
-                  padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
-                  margin: EdgeInsets.fromLTRB(20, 10, 20, 10),// This will be the login form
-                  child: Column(
-                    children: [
-                      // Text(
-                      //   'Hello',
-                      //   style: TextStyle(fontSize: 60, fontWeight: FontWeight.bold),
-                      // ),
-                      // Text(
-                      //   'Signin into your account',
-                      //   style: TextStyle(color: Colors.grey),
-                      // ),
-                      SizedBox(height: 30.0),
-                      Form(
+    return _isLoading
+        ? Center(
+            child: CircularProgressIndicator(),
+          )
+        : Column(
+            children: [
+              widget.isSmall
+                  ? Container(
+                      height: _headerHeight,
+                      child: HeaderWidget(_headerHeight, true, Icons.login_rounded),
+                    )
+                  : Container(),
+              SafeArea(
+                child: Center(
+                  child: Container(
+                    padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
+                    margin: EdgeInsets.fromLTRB(20, 10, 20, 10),
+                    child: Column(
+                      children: [
+                        SizedBox(height: 30.0),
+                        Form(
                           key: _formKey,
                           child: Column(
                             children: [
                               Container(
                                 child: TextFormField(
-                                  controller: _UserXController,
+                                  controller: emailController,
                                   validator: (value) =>
-                                  value!.isEmpty
-                                      ? "s'il vous plait entrer identifiant "
-                                      : null,
-                                  decoration: ThemeHelper().textInputDecoration('Nom', 'Entrer nom utilisateur'),
+                                      value!.isEmpty ? "S'il vous plaît entrer identifiant" : null,
+                                  decoration: ThemeHelper().textInputDecoration(
+                                      'Nom', 'Entrer nom utilisateur'),
                                 ),
                                 decoration: ThemeHelper().inputBoxDecorationShaddow(),
                               ),
                               SizedBox(height: 30.0),
                               Container(
                                 child: TextFormField(
-                                 // keyboardType: TextInputType.text,
                                   obscureText: _passwordVisible,
-                                  controller: _passwordController,
+                                  controller: passwordController,
                                   validator: (value) =>
-                                  value!.isEmpty
-                                      ? "s'il vous plait entrer mot de passe "
-                                      : null,
+                                      value!.isEmpty ? "S'il vous plaît entrer mot de passe" : null,
                                   decoration: InputDecoration(
-                                  labelText: 'Mot de passe',
-                                  hintText: 'Entrer mot de passe',
-                                  fillColor: Colors.white,
-                                  filled: true,
-                                  contentPadding: EdgeInsets.fromLTRB(20, 10, 20, 10),
-                                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(100.0), borderSide: BorderSide(color: Colors.grey)),
-                                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(100.0), borderSide: BorderSide(color: Colors.grey.shade400)),
-                                  errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(100.0), borderSide: BorderSide(color: Colors.red, width: 2.0)),
-                                  focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(100.0), borderSide: BorderSide(color: Colors.red, width: 2.0)),
+                                    labelText: 'Mot de passe',
+                                    hintText: 'Entrer mot de passe',
+                                    fillColor: Colors.white,
+                                    filled: true,
+                                    contentPadding: EdgeInsets.fromLTRB(20, 10, 20, 10),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(100.0),
+                                      borderSide: BorderSide(color: Colors.grey),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(100.0),
+                                      borderSide: BorderSide(color: Colors.grey.shade400),
+                                    ),
+                                    errorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(100.0),
+                                      borderSide: BorderSide(color: Colors.red, width: 2.0),
+                                    ),
+                                    focusedErrorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(100.0),
+                                      borderSide: BorderSide(color: Colors.red, width: 2.0),
+                                    ),
                                     suffixIcon: IconButton(
                                       icon: Icon(
-                                        // Based on passwordVisible state choose the icon
-                                        _passwordVisible
-                                            ? Icons.visibility_off
-                                            : Icons.visibility,
+                                        _passwordVisible ? Icons.visibility_off : Icons.visibility,
                                         color: Colors.grey,
                                       ),
                                       onPressed: () {
-                                        // Update the state i.e. toogle the state of passwordVisible variable
                                         setState(() {
                                           _passwordVisible = !_passwordVisible;
                                         });
                                       },
                                     ),
-                                ),
+                                  ),
                                 ),
                                 decoration: ThemeHelper().inputBoxDecorationShaddow(),
                               ),
                               SizedBox(height: 30.0),
-                              // Container(
-                              //   margin: EdgeInsets.fromLTRB(10,0,10,20),
-                              //   alignment: Alignment.topRight,
-                              //   child: GestureDetector(
-                              //     onTap: () {
-                              //       Navigator.push( context, MaterialPageRoute( builder: (context) => ForgotPasswordPage()), );
-                              //     },
-                              //     child: Text( "Forgot your password?", style: TextStyle( color: Colors.grey, ),
-                              //     ),
-                              //   ),
-                              // ),
                               Container(
                                 decoration: ThemeHelper().buttonBoxDecoration(context),
                                 child: ElevatedButton(
                                   style: ThemeHelper().buttonStyle(),
                                   child: Padding(
                                     padding: EdgeInsets.fromLTRB(40, 10, 40, 10),
-                                    child: Text('Se connecter'.toUpperCase(), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),),
+                                    child: Text(
+                                      'Se connecter'.toUpperCase(),
+                                      style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    ),
                                   ),
-                                  onPressed: (){
-                                    //After successful login we will redirect to profile page. Let's create profile page now
-                                    //Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfilePage()));
-                                    if (_formKey.currentState!.validate()) {
-                                      login(_UserXController.text, _passwordController.text);
-
-                                    }
-                                  },
+                                  onPressed: _handleLogin,
                                 ),
                               ),
                               Container(
-                                 margin: EdgeInsets.fromLTRB(10,20,10,20),
-                                 child: Text.rich(
-                                     TextSpan(
-                                         children: [
-                                           TextSpan(text: "Don\'t have an account? "),
-                                           TextSpan(
-                                             text: 'Create',
-                                             recognizer: TapGestureRecognizer()
-                                               ..onTap = (){
-                                                Navigator.push(context, MaterialPageRoute(builder: (context) => RegistrationPage()));
-                                               },
-                                             style: TextStyle(fontWeight: FontWeight.bold, color: accentColor),
-                                           ),
-                                         ]
-                                     )
-                                 ),
-
+                                margin: EdgeInsets.fromLTRB(10, 20, 10, 20),
+                                child: Text.rich(
+                                  TextSpan(
+                                    children: [
+                                      TextSpan(
+                                          text: "Vous n'avez pas de compte?",
+                                          style: TextStyle(fontSize: 15)),
+                                      TextSpan(
+                                        text: ' Inscrivez-vous !',
+                                        recognizer: TapGestureRecognizer()
+                                          ..onTap = () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) => RegistrationPage()),
+                                            );
+                                          },
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(context).colorScheme.secondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
                             ],
-                          )
-                      ),
-                    ],
-                  )
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ],
-
-    );
-
-  }
-
-  login(String email, String password)  {
-    setState(() {
-      isLoading = true;
-    });
-    String myUrl = BaseUrl.Login;
-    http.post(Uri.parse(myUrl),
-        body:{
-          "email": email,
-          "password": password,
-
-        }
-    ).then((response) async {
-
-      print('Response status : ${response.statusCode}');
-      print('Response body : ${response.body}');
-      if(response.statusCode == 200){
-
-        final data = jsonDecode(response.body);
-        print('data ===== $data');
-        print("data status code  ===== ${data['status_code']}");
-
-        if(data['status_code'] == 200) {
-
-          Utils.setToken(data['token']);
-          print(data['token']);
-
-          Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => Menu()), (route) => false);
-
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('Login',email );
-          await prefs.setString('password',password );
-          await prefs.setString('Token',data['token'] );
-
-
-          setState(() {
-            isLoading = !isLoading;
-          });
-
-        } else {
-          Fluttertoast.showToast(
-              msg: "échec de la connexion s'il vous plait vérifier votre email ou mot de passe",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.CENTER,
-              timeInSecForIosWeb: 1,
-              backgroundColor: Colors.red,
-              textColor: Colors.white,
-              fontSize: 16.0
+            ],
           );
-          setState(() {
-            isLoading = !isLoading;
-          });
-        }
-      }
-    });
-
-  }
-  Future<void> _showMyDialog() async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('champs vide'),
-          content: const SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text(" S’il vous plaît choisir représentant ou client."),
-
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Approve'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 }
-

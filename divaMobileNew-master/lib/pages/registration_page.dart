@@ -1,8 +1,11 @@
 
 import 'package:divamobile/Models/api_response.dart';
 import 'package:divamobile/Models/user.dart';
-import 'package:divamobile/pages/Menu/Menu.dart';
+import 'package:divamobile/constants.dart';
+import 'package:divamobile/pages/Login/firstScreen.dart';
+import 'package:divamobile/pages/widgets/verificationCodePage.dart';
 import 'package:divamobile/services/user_services.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hexcolor/hexcolor.dart';
@@ -20,20 +23,23 @@ class RegistrationPage extends  StatefulWidget{
 }
 
 class _RegistrationPageState extends State<RegistrationPage>{
-
+  bool loading = false;
   bool checkedValue = false;
   bool checkboxValue = false;
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  bool loading = false;
+  
   TextEditingController
     nameController = TextEditingController(), 
+    prenameController = TextEditingController(),
     emailController = TextEditingController(),
+    phoneController = TextEditingController(),
     passwordController = TextEditingController(),
-    passwordConfirmController = TextEditingController();
+    passwordConfirmController = TextEditingController(),
+    verificationCodeController = TextEditingController() ;
 
  
  void _registerUser () async {
-    ApiResponse response = await register(nameController.text, emailController.text, passwordController.text);
+    ApiResponse response = await register(nameController.text, prenameController.text, emailController.text, phoneController.text, passwordController.text);
     if(response.error == null) {
       _saveAndRedirectToHome(response.data as User);
     } 
@@ -52,7 +58,7 @@ class _RegistrationPageState extends State<RegistrationPage>{
     SharedPreferences pref = await SharedPreferences.getInstance();
     await pref.setString('token', user.token ?? '');
     await pref.setInt('userId', user.id ?? 0);
-    Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context)=>Menu()), (route) => false);
+    Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context)=>VerifyCodePage(email: emailController.text, verificationCode: verificationCodeController.text  )), (route) => false);
   }
 
   @override
@@ -114,6 +120,8 @@ class _RegistrationPageState extends State<RegistrationPage>{
                         SizedBox(height: 30,),
                         Container(
                           child: TextFormField(
+                            controller: nameController,
+                            validator: (val) => val!.isEmpty ? 'Nom Invalide' : null,
                             decoration: ThemeHelper().textInputDecoration('Nom', 'Entrer votre nom'),
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
@@ -121,6 +129,8 @@ class _RegistrationPageState extends State<RegistrationPage>{
                         SizedBox(height: 30,),
                         Container(
                           child: TextFormField(
+                            controller: prenameController,
+                            validator: (val) => val!.isEmpty ? 'Prénom Invalide' : null,
                             decoration: ThemeHelper().textInputDecoration('Prénom', 'Entrer votre prénom'),
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
@@ -128,6 +138,7 @@ class _RegistrationPageState extends State<RegistrationPage>{
                         SizedBox(height: 20.0),
                         Container(
                           child: TextFormField(
+                            controller:emailController,
                             decoration: ThemeHelper().textInputDecoration("Adresse email", "Entrer votre adresse email"),
                             keyboardType: TextInputType.emailAddress,
                             validator: (val) {
@@ -142,12 +153,13 @@ class _RegistrationPageState extends State<RegistrationPage>{
                         SizedBox(height: 20.0),
                         Container(
                           child: TextFormField(
+                            controller: phoneController,
                             decoration: ThemeHelper().textInputDecoration(
                                 "Numéro de téléphone",
                                 "Entrer votre numéro de téléphone"),
                             keyboardType: TextInputType.phone,
                             validator: (val) {
-                              if(!(val!.isEmpty) && !RegExp(r"^(\d+)*$").hasMatch(val)){
+                              if (val == null || val.isEmpty || val.length != 8 ||!RegExp(r"^\d+$").hasMatch(val)) {
                                 return "Entrer un numéro de téléphone valide";
                               }
                               return null;
@@ -162,6 +174,7 @@ class _RegistrationPageState extends State<RegistrationPage>{
                             obscureText: true,
                             decoration: ThemeHelper().textInputDecoration(
                                 "Mot de passe", "Entrer votre mot de passe"),
+                                
                             validator: (val) => val!.length < 6 ? 'Required at least 6 chars' : null,
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
@@ -237,17 +250,25 @@ class _RegistrationPageState extends State<RegistrationPage>{
                             },
                           ),
                         ),
-                        SizedBox(height: 20.0),
-                          Container(
+                        Container(
                                 margin: EdgeInsets.fromLTRB(10,20,10,20),
                                 child: Text.rich(
                                     TextSpan(
                                         children: [
+                                          TextSpan(text: "Vous avez déjà un compte ? "),
+                                          TextSpan(
+                                            text: 'Se connecter \n',
+                                            recognizer: TapGestureRecognizer()
+                                              ..onTap = (){
+                                                Navigator.push(context, MaterialPageRoute(builder: (context) => FirstScreen()));
+                                              },
+                                            style: TextStyle(fontWeight: FontWeight.bold, color: accentColor),
+                                          ),
                                           TextSpan(
                                             text: "Ou créer un compte avec les réseaux sociaux"),
-                                         ]
-                                     )
-                                 ),
+                                        ]
+                                    )
+                                ),
 
                               ),
                         SizedBox(height: 5.0),

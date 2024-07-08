@@ -8,24 +8,23 @@ import 'package:http/http.dart' as http;
 
 import '../Api.dart';
 
-Future<ApiResponse> register(String name, String email, String password) async {
+Future<ApiResponse> register(String nom,String prenom, String email,String phone, String password) async {
   ApiResponse apiResponse = ApiResponse();
-  print('aaaaa');
-  print(BaseUrl.Register);
   try {
     final response = await http.post(
-      
       Uri.parse(BaseUrl.Register),
       headers: {'Accept': 'application/json'}, 
       body: {
-        'name': name,
+        'nom': nom,
+        'prenom': prenom,
+        'phone': phone,
         'email': email,
         'password': password,
         'password_confirmation': password
       });
-  print(response.body);
     switch(response.statusCode) {
       case 200:
+        print('Registration successful');
         apiResponse.data = User.fromJson(jsonDecode(response.body));
         break;
       case 422:
@@ -33,14 +32,15 @@ Future<ApiResponse> register(String name, String email, String password) async {
         apiResponse.error = errors[errors.keys.elementAt(0)][0];
         break;
       default:
-      print(response.body);
         apiResponse.error = somethingWentWrongError;
-        
         break;
     }
   }
   catch (e) {
+    print('Exception caught: $e');
     apiResponse.error = serverError;
   }
   return apiResponse;
 }
+
+
