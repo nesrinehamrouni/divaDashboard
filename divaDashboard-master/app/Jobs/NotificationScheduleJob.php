@@ -58,6 +58,13 @@ class NotificationScheduleJob implements ShouldQueue
      */
     public function handle()
     {
-        NotificationController::notify($this->title, $this->body, $this->key);
+    Log::info("Entering handle function of NotificationScheduleJob");
+        
+        try {
+            NotificationController::notify($this->title, $this->body, $this->key);
+        } catch (\Exception $e) {
+            Log::error("Failed to send notification: " . $e->getMessage());
+            // Handle the exception as needed
+        }
     }
 }

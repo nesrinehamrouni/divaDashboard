@@ -36,7 +36,8 @@ class NotificationController extends Controller
                 "android" => [
                     "priority" => "high",
                     "notification" => [
-                        "sound" => "default"
+                        "sound" => "default",
+                        "icon" => "res_launcher_icon"
                     ]
                 ]
             ]

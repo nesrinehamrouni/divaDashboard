@@ -27,12 +27,17 @@ environment:
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
+
 dependencies:
   flutter:
     sdk: flutter
+    
+
   awesome_notifications: ^0.9.3+1
+  
   flutter_localizations:
     sdk: flutter
+
     
 
 
@@ -70,9 +75,11 @@ dependencies:
   intl: any
   google_fonts: any
   image_picker_platform_interface: ^2.10.0
+
   
 dependency_overrides:
   intl: any
+
 
 
 dev_dependencies:
@@ -132,6 +139,7 @@ flutter:
     - assets/img_menu2/mode-de-paiementgris.png
     - assets/img_menu2/chiffre-daffaires1.png
     - assets/icons/warning.png
+    - android/app/src/main/res/drawable/res_launcher_icon.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

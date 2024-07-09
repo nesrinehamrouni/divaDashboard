@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller{
+
     public function register(Request $request){
         
 
@@ -41,15 +42,15 @@ class AuthController extends Controller{
         Mail::to($user->email)->send(new VerificationCodeMail($user, $verificationCode));
 
         
-    // Return response
-    return response()->json([
-        'message' => 'User registered successfully. Please check your email for the verification code.',
-        'verification_code' => $verificationCode,
-        'user' => $user, 
-    ], 200);
-}
+        // Return response
+        return response()->json([
+            'message' => 'User registered successfully. Please check your email for the verification code.',
+            'verification_code' => $verificationCode,
+            'user' => $user, 
+        ], 200);
+    }
 
-public function login(Request $request)
+    public function login(Request $request)
 {
   Log::info('Login request:', $request->all());
 
@@ -64,7 +65,7 @@ public function login(Request $request)
     }
 
     // Check if the user exists in the external database
-    $ExistUserX = DB::select("SELECT CASE WHEN EXISTS(SELECT 1 FROM MUSER WHERE EMAIL = '" . strtoupper($request->email) . "')THEN 1 ELSE 0 END as EXIST;");
+    $ExistUserX = DB::select("SELECT CASE WHEN EXISTS(SELECT 1 FROM MUSER WHERE USERX = '" . strtoupper($request->email) . "')THEN 1 ELSE 0 END as EXIST;");
 
     if ($ExistUserX[0]->EXIST == 0) {
         return response()->json(['status_code' => 404, 'message' => 'User does not exist']);
@@ -92,50 +93,49 @@ public function login(Request $request)
         'message' => 'Authenticated'
     ]);
 }
-public function logout()
-{
-    auth()->user()->tokens()->delete();
-        return response([
-            'message' => 'Logout success'
-        ],200); 
-}
 
-
-
-public function get_user(){
-
-    return response([
-        'user' => auth()->user()
-    ],200);
-}
-
-
-
-public function destroy(Request $req)
+    public function logout()
     {
-        
-        return User::destroy($req->id);
+        auth()->user()->tokens()->delete();
+            return response([
+                'message' => 'Logout success'
+            ],200); 
     }
 
 
 
-    public function update(Request $req)
-    {
-       $new =  bcrypt($req->password);
-       
-        $user = User::where('email', $req->email)->first();
-        $user->password =$new;
-        $user->nom =$req->nom;
-        $user->prenom =$req->prenom;
-        $user->phone =$req->phone;
-     
+    public function get_user(){
 
-       
-       $user->save();
-    
-      
-       return $user;
-    
+        return response([
+            'user' => auth()->user()
+        ],200);
+    }
+
+
+
+    public function destroy(Request $req){
+            
+            return User::destroy($req->id);
+    }
+
+
+
+    public function update(Request $req){
+        $new =  bcrypt($req->password);
+        
+            $user = User::where('email', $req->email)->first();
+            $user->password =$new;
+            $user->nom =$req->nom;
+            $user->prenom =$req->prenom;
+            $user->phone =$req->phone;
+        
+
+        
+        $user->save();
+        
+        
+        return $user;
+        
     }
 
 

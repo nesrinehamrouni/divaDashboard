@@ -46,28 +46,30 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _sendTokenToServer(String token) async {
+  try {
+    final response = await http.post(
+      Uri.parse(BaseUrl.Notify),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        HttpHeaders.authorizationHeader: 'Bearer ${Utils.getToken()}',
+      },
+      body: jsonEncode(<String, String>{
+        'fcm_token': token,
+      }),
+    );
 
-    try {
-      final response = await http.post(
-        Uri.parse(BaseUrl.Notify),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-          HttpHeaders.authorizationHeader: 'Bearer ${Utils.getToken()}',
-        },
-        body: jsonEncode(<String, String>{
-          'fcm_token': token,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        debugPrint('FCM token successfully sent to server');
-      } else {
-        debugPrint('Failed to send FCM token to server. Status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      debugPrint('Error sending FCM token to server: $e');
+    if (response.statusCode == 200) {
+      debugPrint('FCM token successfully sent to server');
+    } else {
+      debugPrint('Failed to send FCM token to server. Status code: ${response.statusCode}');
+      // Handle other status codes if needed
     }
+  } catch (e) {
+    debugPrint('Error sending FCM token to server: $e');
+    // Handle network or other exceptions
   }
+}
+
 
   void _initializeApp() {
     Timer(const Duration(milliseconds: 2000), () async {
@@ -100,16 +102,26 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // Your existing build method content here
-      body: Center(
-        child: AnimatedOpacity(
-          opacity: _isVisible ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 500),
-          child: Image.asset(
-            'assets/splash_logo.png', // Replace with your splash screen logo
-            width: 200,
-            height: 200,
+
+    return Container(
+      decoration: new BoxDecoration(
+        gradient: new LinearGradient(
+          colors: [Color(0xFF2f3b46),Color(0xFF2f3b46)],
+          begin: const FractionalOffset(0, 0),
+          end: const FractionalOffset(1.0, 0.0),
+          stops: [0.0, 1.0],
+          tileMode: TileMode.clamp,
+        ),
+      ),
+      child: AnimatedOpacity(
+        opacity: _isVisible ? 1.0 : 0,
+        duration: Duration(milliseconds: 1200),
+        child: Center(
+          child: Container(
+            height: 140.0,
+            width: 140.0,
+            child:  Image(image: AssetImage('assets/images/Divalto_logo.png'),
+              )
           ),
         ),
       ),

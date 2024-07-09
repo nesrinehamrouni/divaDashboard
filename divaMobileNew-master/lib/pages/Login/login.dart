@@ -27,31 +27,28 @@ class _LoginBtnState extends State<LoginBtn> {
   bool _isLoading = false;
 
 Future<void> _login() async {
-    final String email = emailController.text;
-    final String password = passwordController.text;
+  final String email = emailController.text;  // Trim whitespace
+  final String password = passwordController.text;  // Trim whitespace
 
-    print('Attempting login with email: $email and password: $password');
+  print('Attempting login with email: $email and password: $password');
 
-    try {
-      print("Before HTTP POST request");
-      final response = await http.post(
-        Uri.parse(BaseUrl.Login),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'email': email,
-          'password': password,
-        }),
-      );
-      print("After HTTP POST request");
+  try {
+    final response = await http.post(
+      Uri.parse(BaseUrl.Login),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'email': email,
+        'password': password,
+      }),
+    );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+    final responseBody = jsonDecode(response.body);
 
-      final responseBody = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
+    if (response.statusCode == 200) {
+      // Check if login was successful and user exists
+      if (responseBody['status_code'] == 200) {
         print('Login successful');
         Fluttertoast.showToast(
           msg: 'Login successful',
@@ -60,24 +57,17 @@ Future<void> _login() async {
         );
         // Navigate to menu page
         Navigator.pushReplacementNamed(context, '/Menu');
-      } else if (response.statusCode == 401) {
+      } else if (responseBody['status_code'] == 401) {
         print('Login failed: Incorrect email or password');
         Fluttertoast.showToast(
           msg: 'Incorrect email or password',
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.BOTTOM,
         );
-      } else if (response.statusCode == 404) {
+      } else if (responseBody['status_code'] == 404) {
         print('Login failed: User does not exist');
         Fluttertoast.showToast(
           msg: 'User does not exist',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-        );
-      } else if (response.statusCode == 400) {
-        print('Login failed: Bad request');
-        Fluttertoast.showToast(
-          msg: 'Bad request',
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.BOTTOM,
         );
@@ -89,28 +79,39 @@ Future<void> _login() async {
           gravity: ToastGravity.BOTTOM,
         );
       }
-    } catch (e) {
-      print('Login error: $e');
+    } else {
+      // Handle other HTTP status codes
+      print('Login failed with status code: ${response.statusCode}');
       Fluttertoast.showToast(
-        msg: 'Server error: $e',
+        msg: 'Login failed with status code: ${response.statusCode}',
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.BOTTOM,
       );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
     }
+  } catch (e) {
+    print('Login error: $e');
+    Fluttertoast.showToast(
+      msg: 'Server error: $e',
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+    );
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
 
-  void _handleLogin() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-      await _login();
-    }
+
+void _handleLogin() async {
+  if (_formKey.currentState!.validate()) {
+    setState(() {
+      _isLoading = true;
+    });
+    await _login();
   }
+}
+
 
 
   @override
