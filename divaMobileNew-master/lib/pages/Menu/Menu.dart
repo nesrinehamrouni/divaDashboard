@@ -3,7 +3,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:blurry_modal_progress_hud/blurry_modal_progress_hud.dart';
 import 'package:divamobile/Notification/notif.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
@@ -55,9 +54,8 @@ class _MenuState extends State<Menu> {
     NotificationController.notificationListener = () {
       setState(() {});
     };
-
+    
   }
-
   
   Future<void> getNotif() async {
     Notif_Function.notify();
@@ -130,65 +128,52 @@ class _MenuState extends State<Menu> {
                 ),
               ),
               titleSpacing: 20.0,
-              // leading:  IconButton(
-              //   icon:  Icon(Icons.arrow_back),
-              //   onPressed: () {
-              //     Navigator.push(
-              //         context,
-              //         MaterialPageRoute(
-              //             builder: (context) => Filter_CA()));
-              //
-              //   },
-              // ),
-             actions: [
-               IconButton(onPressed: () async {
-                 _showMyDialog();
+            actions: [
+              IconButton(onPressed: () async {
+                _showMyDialog();
 
 
-               }, icon: Icon(Icons.manage_accounts_outlined,color: Colors.white,)),
+              }, icon: Icon(Icons.manage_accounts_outlined,color: Colors.white,)),
 
-               new Stack(
-                 children: <Widget>[
-                   new IconButton(icon: Icon(Icons.notifications), onPressed: () {
-                     setState(() {
-                       _shownotif();
-                     });
-                   }),
-                   if (NotificationController.notificationCounter != 0)
-                      Positioned(
-                        right: 11,
-                        top: 11,
-                        child: Container(
-                          padding: EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                       constraints: BoxConstraints(
-                         minWidth: 14,
-                         minHeight: 14,
-                       ),
-                       child: Text(
-                            '${NotificationController.notificationCounter}',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 8,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                     ),
-                   )
-                 ],
-               ),
+              new Stack(
+                children: <Widget>[
+                  new IconButton(icon: Icon(Icons.notifications, color: Colors.white, ), onPressed: () {
+                    setState(() {
+                      _shownotif();
+                    });
+                  }),
+                  counter != 0 ? new Positioned(
+                    right: 11,
+                    top: 11,
+                    child: new Container(
+                      padding: EdgeInsets.all(2),
+                      decoration: new BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      constraints: BoxConstraints(
+                        minWidth: 14,
+                        minHeight: 14,
+                      ),
+                      child: Text(
+                        '$counter',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ) : new Container()
+                ],
+              ),
 
-               IconButton(onPressed: () async {
+              IconButton(onPressed: () async {
+                logout();
+              }, icon: Icon(Icons.logout,color: Colors.white,)),
+            ],
 
-                 logout();
-
-               }, icon: Icon(Icons.logout,color: Colors.white,)),
-             ],
-
-              title:Text("Menu"),
+              title: Text("Menu", style: TextStyle(color: Colors.white)),
 
 
             ),
@@ -227,31 +212,16 @@ class _MenuState extends State<Menu> {
                               Radius.circular(20.0),
                             ),
                           ),
-                          //  color: Colors.blue[800],
                           margin:  EdgeInsets.all(15.r),
                           child: Container(
-                            //height: 50.h,
-                            // width: 150.w,
                               decoration: BoxDecoration(
 
                                 borderRadius: BorderRadius.circular(20),
-                                //border: BorderSide(color: Colors.white70, width: 1),
-                                // gradient: const LinearGradient(
-                                //   colors: [
-                                //     Color(0xFF5b6f82),
-                                //     Color(0xFF424f5c),
-                                //     Color(0xFF5b6f82),
-                                //   ],
-                                //   begin: Alignment.topLeft,
-                                //   end: Alignment.bottomRight,
-                                // ),
                               ),
                               child: getCardByTitle(title)//declare your widget here
                           ),
                         ),
                         onTap: () {
-
-
                           if (title == "Tableau de bord") {
                             setState(() {
                               Global.NB_stock =0;
@@ -391,8 +361,7 @@ if (title == "Consultation Pièces Fournisseur") {
       isLoading = true;
     });
     final prefs = await SharedPreferences.getInstance();
-    String myUrl = BaseUrl.Login;
-    http.post(Uri.parse(myUrl),
+    http.post(Uri.parse(BaseUrl.Login),
         headers: {
           HttpHeaders.authorizationHeader: 'Bearer ${prefs.getString('Token')}',
         },
@@ -530,82 +499,45 @@ if (title == "Consultation Pièces Fournisseur") {
 
 
 
-var List_notif = [];
+  var List_notif = [];
 
 
-//   Future getAllnotif()  async {
-// setState(() {
-//   loadingNotif=true;
-// });
-  
-//     http.post(Uri.parse(BaseUrl.Notify),
-//         headers: {
-//           HttpHeaders.authorizationHeader: 'Bearer ${Utils.getToken()}',
-//         },
-//         body: {
+  Future getAllnotif()  async {
+setState(() {
+  loadingNotif=true;
+});
+    http.post(Uri.parse(BaseUrl.get_Notification),
+        headers: {
+          HttpHeaders.authorizationHeader: 'Bearer ${Utils.getToken()}',
+        },
+        body: {
 
 
-//           "DOS":Global.getDOS(),
-//           "date":DateTime.now().toString(),
+          "DOS":Global.getDOS(),
+          "date":DateTime.now().toString(),
 
-//         }).then((response) {
-//       print('Response status : ${response.statusCode}');
-//       print('Response body notif : ${response.body}');
+        }).then((response) {
+      print('Response status : ${response.statusCode}');
+      print('Response body notif : ${response.body}');
 
-//       if (response.statusCode == 200) {
-//         var jsonData = json.decode(response.body);
-//         setState(() {
-//           List_notif = jsonData;
-//           //print(SousTypeCLItemlist);
-//           counter = List_notif.length;
-//           print("counter == ${counter}");
-//         });
+      if (response.statusCode == 200) {
+        var jsonData = json.decode(response.body);
+        setState(() {
+          List_notif = jsonData;
+          //print(SousTypeCLItemlist);
+          counter = List_notif.length;
+          print("counter == ${counter}");
+        });
 
-//       }
-//       setState(() {
-//         loadingNotif=false;
-//       });
-//     });
-
-//   }
-
-
-// }
-
-
- Future<void> getAllnotif() async {
-    setState(() {
-      loadingNotif = true;
-    });
-
-    final response = await http.post(
-      Uri.parse(BaseUrl.Notify),
-      headers: {
-        HttpHeaders.authorizationHeader: 'Bearer ${Utils.getToken()}',
-      },
-      body: {
-        "DOS": Global.getDOS(),
-        "date": DateTime.now().toString(),
-      },
-    );
-
-    print('Response status: ${response.statusCode}');
-    print('Response body notif: ${response.body}');
-
-    if (response.statusCode == 200) {
-      var jsonData = json.decode(response.body);
+      }
       setState(() {
-        List_notif = jsonData;
-        counter = List_notif.length;
-        print("counter == $counter");
+        loadingNotif=false;
       });
-    }
-
-    setState(() {
-      loadingNotif = false;
     });
-  }
-}
 
+  }
+
+
+}
 
 
