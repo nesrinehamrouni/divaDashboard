@@ -1,36 +1,26 @@
 {
   "project_info": {
-    "project_number": "453421272103",
-    "project_id": "divamobile-77c11",
-    "storage_bucket": "divamobile-77c11.appspot.com"
+    "project_number": "23481155335",
+    "project_id": "laravelnotif-ec82d",
+    "storage_bucket": "laravelnotif-ec82d.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:453421272103:android:ab06a439168829c7749202",
+        "mobilesdk_app_id": "1:23481155335:android:984e000256a24c95d6cfa2",
         "android_client_info": {
-          "package_name": "com.exemple.divamobile"
+          "package_name": "com.example.divamobile"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "453421272103-ratde0lq4pcfg8q48uobiplk13g8lhrf.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAjUPnOyxr5qskMDmdYUBN1krLKnQIELQQ"
+          "current_key": "AIzaSyCJYbwNxmB4pzRWnMhRx_OH9-lTe95GgdQ"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "453421272103-ratde0lq4pcfg8q48uobiplk13g8lhrf.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

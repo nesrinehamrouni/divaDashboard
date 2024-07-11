@@ -1,266 +1,225 @@
-
 import 'dart:convert';
-
-import 'package:divamobile/constants.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../../../common/theme_helper.dart';
 import '../../../../pages/widgets/header_widget.dart';
 import '../../Api.dart';
-import '../../Utils.dart';
-import '../Menu/Menu.dart';
 import '../registration_page.dart';
 
+class LoginBtn extends StatefulWidget {
+  final bool isSmall;
+  final Function(bool) onLoginStateChanged;
 
-class Login extends StatefulWidget{
-  final bool isSmall ;
-  const Login({Key? key, required this.isSmall}): super(key:key);
+  const LoginBtn({
+    Key? key,
+    required this.isSmall,
+    required this.onLoginStateChanged,
+  }) : super(key: key);
 
   @override
-  _LoginState createState() => _LoginState();
+  _LoginBtnState createState() => _LoginBtnState();
 }
 
-class _LoginState extends State<Login>{
+class _LoginBtnState extends State<LoginBtn> {
   double _headerHeight = 250;
   final _formKey = GlobalKey<FormState>();
-  TextEditingController _passwordController = TextEditingController();
-  TextEditingController _UserXController = TextEditingController();
-  bool _passwordVisible = true ;
-  bool isLoading = false;
+  TextEditingController passwordController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  bool _passwordVisible = true;
 
-  
+  Future<void> _login() async {
+    final String email = emailController.text.trim();
+    final String password = passwordController.text.trim();
+
+    print('Attempting login with email: $email and password: $password');
+
+    try {
+      final response = await http.post(
+        Uri.parse(BaseUrl.Login),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'email': email,
+          'password': password,
+        }),
+      );
+
+      final responseBody = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        if (responseBody['status_code'] == 200) {
+          print('Login successful');
+          _showSnackBar('Login successful', Colors.green);
+          Navigator.pushReplacementNamed(context, '/Menu');
+        } else if (responseBody['status_code'] == 401) {
+          print('Login failed: Incorrect email or password');
+          _showSnackBar("Adresse e-mail ou mot de passe incorrect.", Colors.red);
+        } else if (responseBody['status_code'] == 404) {
+          print('Login failed: User does not exist');
+          _showSnackBar("L'utilisateur n'existe pas. Vérifiez votre saisie.", Colors.red);
+        } else {
+          print('Login failed with message: ${responseBody['message']}');
+          _showSnackBar(responseBody['message'], Colors.red);
+        }
+      } else {
+        print('Login failed with status code: ${response.statusCode}');
+        _showSnackBar('Login failed with status code: ${response.statusCode}', Colors.red);
+      }
+    } catch (e) {
+      print('Login error: $e');
+      _showSnackBar('Server error: $e', Colors.red);
+    }
+  }
+
+  void _showSnackBar(String message, Color color) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      backgroundColor: color,
+      duration: Duration(seconds: 2),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  void _handleLogin() async {
+    if (_formKey.currentState!.validate()) {
+      widget.onLoginStateChanged(true);
+      await _login();
+      widget.onLoginStateChanged(false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-
-    return
-     isLoading ? Center(child:CircularProgressIndicator(),)
-    :Column(
-        children: [
-          widget.isSmall ? Container(
+    return Column(
+      children: [
+        if (widget.isSmall)
+          Container(
             height: _headerHeight,
-            child: HeaderWidget(_headerHeight, true, Icons.login_rounded), //let's create a common header widget
-          ):Container(),
-          SafeArea(
-            child: Center(
-              child: Container(
-                  padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
-                  margin: EdgeInsets.fromLTRB(20, 10, 20, 10),// This will be the login form
-                  child: Column(
-                    children: [
-                      // Text(
-                      //   'Hello',
-                      //   style: TextStyle(fontSize: 60, fontWeight: FontWeight.bold),
-                      // ),
-                      // Text(
-                      //   'Signin into your account',
-                      //   style: TextStyle(color: Colors.grey),
-                      // ),
-                      SizedBox(height: 30.0),
-                      Form(
-                          key: _formKey,
-                          child: Column(
-                            children: [
-                              Container(
-                                child: TextFormField(
-                                  controller: _UserXController,
-                                  validator: (value) =>
-                                  value!.isEmpty
-                                      ? "s'il vous plait entrer identifiant "
-                                      : null,
-                                  decoration: ThemeHelper().textInputDecoration('Nom', 'Entrer nom utilisateur'),
-                                ),
-                                decoration: ThemeHelper().inputBoxDecorationShaddow(),
+            child: HeaderWidget(_headerHeight, true, Icons.login_rounded),
+          ),
+        SafeArea(
+          child: Center(
+            child: Container(
+              padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
+              margin: EdgeInsets.fromLTRB(20, 10, 20, 10),
+              child: Column(
+                children: [
+                  SizedBox(height: 30.0),
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        Container(
+                          child: TextFormField(
+                            controller: emailController,
+                            validator: (value) =>
+                            value!.isEmpty ? "S'il vous plaît entrer identifiant" : null,
+                            decoration: ThemeHelper().textInputDecoration(
+                                'Nom', 'Entrer nom utilisateur'),
+                          ),
+                          decoration: ThemeHelper().inputBoxDecorationShaddow(),
+                        ),
+                        SizedBox(height: 30.0),
+                        Container(
+                          child: TextFormField(
+                            obscureText: _passwordVisible,
+                            controller: passwordController,
+                            validator: (value) =>
+                            value!.isEmpty ? "S'il vous plaît entrer mot de passe" : null,
+                            decoration: InputDecoration(
+                              labelText: 'Mot de passe',
+                              hintText: 'Entrer mot de passe',
+                              fillColor: Colors.white,
+                              filled: true,
+                              contentPadding: EdgeInsets.fromLTRB(20, 10, 20, 10),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(100.0),
+                                borderSide: BorderSide(color: Colors.grey),
                               ),
-                              SizedBox(height: 30.0),
-                              Container(
-                                child: TextFormField(
-                                 // keyboardType: TextInputType.text,
-                                  obscureText: _passwordVisible,
-                                  controller: _passwordController,
-                                  validator: (value) =>
-                                  value!.isEmpty
-                                      ? "s'il vous plait entrer mot de passe "
-                                      : null,
-                                  decoration: InputDecoration(
-                                  labelText: 'Mot de passe',
-                                  hintText: 'Entrer mot de passe',
-                                  fillColor: Colors.white,
-                                  filled: true,
-                                  contentPadding: EdgeInsets.fromLTRB(20, 10, 20, 10),
-                                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(100.0), borderSide: BorderSide(color: Colors.grey)),
-                                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(100.0), borderSide: BorderSide(color: Colors.grey.shade400)),
-                                  errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(100.0), borderSide: BorderSide(color: Colors.red, width: 2.0)),
-                                  focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(100.0), borderSide: BorderSide(color: Colors.red, width: 2.0)),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        // Based on passwordVisible state choose the icon
-                                        _passwordVisible
-                                            ? Icons.visibility_off
-                                            : Icons.visibility,
-                                        color: Colors.grey,
-                                      ),
-                                      onPressed: () {
-                                        // Update the state i.e. toogle the state of passwordVisible variable
-                                        setState(() {
-                                          _passwordVisible = !_passwordVisible;
-                                        });
-                                      },
-                                    ),
-                                ),
-                                ),
-                                decoration: ThemeHelper().inputBoxDecorationShaddow(),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(100.0),
+                                borderSide: BorderSide(color: Colors.grey.shade400),
                               ),
-                              SizedBox(height: 30.0),
-                              // Container(
-                              //   margin: EdgeInsets.fromLTRB(10,0,10,20),
-                              //   alignment: Alignment.topRight,
-                              //   child: GestureDetector(
-                              //     onTap: () {
-                              //       Navigator.push( context, MaterialPageRoute( builder: (context) => ForgotPasswordPage()), );
-                              //     },
-                              //     child: Text( "Forgot your password?", style: TextStyle( color: Colors.grey, ),
-                              //     ),
-                              //   ),
-                              // ),
-                              Container(
-                                decoration: ThemeHelper().buttonBoxDecoration(context),
-                                child: ElevatedButton(
-                                  style: ThemeHelper().buttonStyle(),
-                                  child: Padding(
-                                    padding: EdgeInsets.fromLTRB(40, 10, 40, 10),
-                                    child: Text('Se connecter'.toUpperCase(), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),),
+                              errorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(100.0),
+                                borderSide: BorderSide(color: Colors.red, width: 2.0),
+                              ),
+                              focusedErrorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(100.0),
+                                borderSide: BorderSide(color: Colors.red, width: 2.0),
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _passwordVisible ? Icons.visibility_off : Icons.visibility,
+                                  color: Colors.grey,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _passwordVisible = !_passwordVisible;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                          decoration: ThemeHelper().inputBoxDecorationShaddow(),
+                        ),
+                        SizedBox(height: 30.0),
+                        Container(
+                          decoration: ThemeHelper().buttonBoxDecoration(context),
+                          child: ElevatedButton(
+                            style: ThemeHelper().buttonStyle(),
+                            child: Padding(
+                              padding: EdgeInsets.fromLTRB(40, 10, 40, 10),
+                              child: Text(
+                                'Se connecter'.toUpperCase(),
+                                style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
+                              ),
+                            ),
+                            onPressed: _handleLogin,
+                          ),
+                        ),
+                        Container(
+                          margin: EdgeInsets.fromLTRB(10, 20, 10, 20),
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                    text: "Vous n'avez pas de compte?",
+                                    style: TextStyle(fontSize: 15)),
+                                TextSpan(
+                                  text: ' Inscrivez-vous !',
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => RegistrationPage()),
+                                      );
+                                    },
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).colorScheme.secondary,
                                   ),
-                                  onPressed: (){
-                                    //After successful login we will redirect to profile page. Let's create profile page now
-                                    //Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfilePage()));
-                                    if (_formKey.currentState!.validate()) {
-                                      login(_UserXController.text, _passwordController.text);
-
-                                    }
-                                  },
                                 ),
-                              ),
-                              Container(
-                                 margin: EdgeInsets.fromLTRB(10,20,10,20),
-                                 child: Text.rich(
-                                     TextSpan(
-                                         children: [
-                                           TextSpan(text: "Don\'t have an account? "),
-                                           TextSpan(
-                                             text: 'Create',
-                                             recognizer: TapGestureRecognizer()
-                                               ..onTap = (){
-                                                Navigator.push(context, MaterialPageRoute(builder: (context) => RegistrationPage()));
-                                               },
-                                             style: TextStyle(fontWeight: FontWeight.bold, color: accentColor),
-                                           ),
-                                         ]
-                                     )
-                                 ),
-
-                              ),
-                            ],
-                          )
-                      ),
-                    ],
-                  )
+                              ],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
-
-    );
-
-  }
-
-  login(String email, String password)  {
-    setState(() {
-      isLoading = true;
-    });
-    String myUrl = BaseUrl.Login;
-    http.post(Uri.parse(myUrl),
-        body:{
-          "email": email,
-          "password": password,
-
-        }
-    ).then((response) async {
-
-      print('Response status : ${response.statusCode}');
-      print('Response body : ${response.body}');
-      if(response.statusCode == 200){
-
-        final data = jsonDecode(response.body);
-        print('data ===== $data');
-        print("data status code  ===== ${data['status_code']}");
-
-        if(data['status_code'] == 200) {
-
-          Utils.setToken(data['token']);
-          print(data['token']);
-
-          Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => Menu()), (route) => false);
-
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('Login',email );
-          await prefs.setString('password',password );
-          await prefs.setString('Token',data['token'] );
-
-
-          setState(() {
-            isLoading = !isLoading;
-          });
-
-        } else {
-          Fluttertoast.showToast(
-              msg: "échec de la connexion s'il vous plait vérifier votre email ou mot de passe",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.CENTER,
-              timeInSecForIosWeb: 1,
-              backgroundColor: Colors.red,
-              textColor: Colors.white,
-              fontSize: 16.0
-          );
-          setState(() {
-            isLoading = !isLoading;
-          });
-        }
-      }
-    });
-
-  }
-  Future<void> _showMyDialog() async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('champs vide'),
-          content: const SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text(" S’il vous plaît choisir représentant ou client."),
-
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Approve'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
+        ),
+      ],
     );
   }
 }
-
