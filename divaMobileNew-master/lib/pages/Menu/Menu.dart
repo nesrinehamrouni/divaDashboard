@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:blurry_modal_progress_hud/blurry_modal_progress_hud.dart';
-import 'package:divamobile/Notification/notif.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -14,9 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../Api.dart';
 import '../../My_globals.dart';
-import '../../Notification/notif_function.dart';
 import '../../PièceFOU/PieceFou.dart';
-import '../../Utils.dart';
 import '../../constants.dart';
 import '../../pieceCLI/PieceCLI.dart';
 import '../Login/Choix_DOS_ETB.dart';
@@ -33,33 +30,30 @@ class Menu extends StatefulWidget {
 class _MenuState extends State<Menu> {
   final controller = DragSelectGridViewController();
   var taille ;
+  int counter = 0;
+  List<Map<String, dynamic>> notifications = [];
+  bool isLoading = false;
+  Timer? _timer;
 
   @override
    initState()   {
 
     super.initState();
-    controller.addListener(scheduleRebuild);
+    // controller.addListener(scheduleRebuild);
 
     getDOS_ETB();
-    getAllnotif();
-
-    // Initializing notification counter
-    SharedPreferences.getInstance().then((prefs) {
-      setState(() {
-        NotificationController.notificationCounter = prefs.getInt('notification_counter') ?? 0;
-      });
+    // Initial fetch
+    fetchNotifications();
+    // Set up timer for periodic fetches
+    _timer = Timer.periodic(Duration(minutes: 5), (timer) {
+      fetchNotifications();
     });
-
-     //listener to update the notification badge
-    NotificationController.notificationListener = () {
-      setState(() {});
-    };
     
   }
   
-  Future<void> getNotif() async {
-    Notif_Function.notify();
-  }
+  // Future<void> getNotif() async {
+  //   Notif_Function.notify();
+  // }
 
   Future<void> getDOS_ETB() async {
     final prefs = await SharedPreferences.getInstance();
@@ -74,8 +68,124 @@ class _MenuState extends State<Menu> {
 
   }
 
+
+ Future<void> fetchNotifications() async {
+  setState(() {
+    isLoading = true;
+  });
+
+  try {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('auth_token');
+
+    if (token == null) {
+      throw Exception('No authentication token found');
+    }
+
+    final url = BaseUrl.getNotifications;
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    ).timeout(Duration(seconds: 10));
+    
+    if (response.statusCode == 200) {
+      final List<dynamic> notificationData = json.decode(response.body);
+      if (notificationData.isNotEmpty) {
+        setState(() {
+          notifications.add(Map<String, dynamic>.from(notificationData[0]));
+          counter = notifications.length; // All notifications in the list are unread
+        });
+      }
+    } else if (response.statusCode == 401) {
+      print('Unauthorized access. Token may be invalid or expired.');
+    } else {
+      throw HttpException('Failed to load notification. Status code: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Error fetching notification: $e');
+  } finally {
+    setState(() {
+      isLoading = false;
+    });
+  }
+}
+
+ void _shownotif() {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: Text('Notifications'),
+            content: Container(
+              width: double.maxFinite,
+              height: 300,
+              child: isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : notifications.isEmpty
+                      ? Center(child: Text('No notifications'))
+                      : ListView.builder(
+                          itemCount: notifications.length,
+                          itemBuilder: (context, index) {
+                            final notification = notifications[index];
+                            return Dismissible(
+                              key: Key(notification['MNOTIFICATION_ID'].toString()),
+                              background: Container(
+                                color: Colors.red,
+                                alignment: Alignment.centerRight,
+                                padding: EdgeInsets.symmetric(horizontal: 20),
+                                child: Icon(Icons.delete, color: Colors.white),
+                              ),
+                              direction: DismissDirection.endToStart,
+                              onDismissed: (direction) {
+                                setDialogState(() {
+                                  removeNotification(notification['MNOTIFICATION_ID'].toString());
+                                });
+                              },
+                              child: ListTile(
+                                title: Text(notification['LIBL1'] ?? 'No title'),
+                                subtitle: Text(notification['AFFICHAGETPV'] ?? 'No content'),
+                                tileColor: Colors.yellow[100],
+                                onTap: () {
+                                  setDialogState(() {
+                                    removeNotification(notification['MNOTIFICATION_ID'].toString());
+                                  });
+                                },
+                              ),
+                            );
+                          },
+                        ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text('Close'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
+void removeNotification(String notificationId) {
+  setState(() {
+    notifications.removeWhere((n) => n['MNOTIFICATION_ID'].toString() == notificationId);
+    counter = notifications.length;
+  });
+}
+
+
   @override
   void dispose() {
+    _timer?.cancel();
     controller.removeListener(scheduleRebuild);
     super.dispose();
   }
@@ -92,7 +202,9 @@ class _MenuState extends State<Menu> {
 
   ];
 
-  int counter = 0 ;
+
+
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -216,7 +328,7 @@ class _MenuState extends State<Menu> {
                           child: Container(
                               decoration: BoxDecoration(
 
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(20), 
                               ),
                               child: getCardByTitle(title)//declare your widget here
                           ),
@@ -353,8 +465,6 @@ if (title == "Consultation Pièces Fournisseur") {
   void scheduleRebuild() => setState(() {});
 
 
- bool isLoading = false;
-
   logout()  async {
 
     setState(() {
@@ -423,119 +533,157 @@ if (title == "Consultation Pièces Fournisseur") {
     );
   }
 
-  bool loadingNotif = false;
+  // bool loadingNotif = false;
 
 
-  final GlobalKey<RefreshIndicatorState> _refresh =
-  GlobalKey<RefreshIndicatorState>();
+  // final GlobalKey<RefreshIndicatorState> _refresh =
+  // GlobalKey<RefreshIndicatorState>();
 
-  Future<void> _shownotif() async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Notifications'),
-          content: Container(
-           height: 200,
-            width: 200,
+  // Future<void> _shownotif() async {
+  //   return showDialog<void>(
+  //     context: context,
+  //     barrierDismissible: false, // user must tap button!
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: const Text('Notifications'),
+  //         content: Container(
+  //          height: 200,
+  //           width: 200,
 
-            child: RefreshIndicator(
+  //           child: RefreshIndicator(
 
-              onRefresh: getAllnotif,
-              key: _refresh,
-              child: loadingNotif
-                  ? Center(child: CircularProgressIndicator())
-                  : SingleChildScrollView(
-                  child:Container(
-
-
-                    child: ListView.builder(
-                    itemCount: List_notif.length,
-
-              shrinkWrap: true,
-              itemBuilder: (context,index){
-
-                return Container(
-                  height: 40,
-                  padding: EdgeInsets.all(5),
-                  child: Card(
-
-                      child: ListTile(
-                        leading:  Image.asset(
-                        List_notif[index]['IMPORTANCE']=='1' ?"assets/icons/warning.png":List_notif[index]['IMPORTANCE']=='2' ? "assets/icons/warning.png":"assets/icons/warning.png",
-                          width: 20.w,
-                          height: 20.w,
-                        ),
-                        title: Text(List_notif[index]['LIBL1'] ,
-                        style: TextStyle( color:List_notif[index]['IMPORTANCE']=='2' ? Colors.orange : List_notif[index]['IMPORTANCE']=='3'? Colors.red : Colors.black54 ,
-                        fontWeight: FontWeight.w500
-                        ),
-                        ),
-                      ),
-
-                  ),
-                );
-                    }
-                    ),
-                  )
-
-              ),
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child:  Text('ok',style: TextStyle(color: Colors.blue[600]!),),
-              onPressed: () async {
-
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+  //             onRefresh: getAllnotif,
+  //             key: _refresh,
+  //             child: loadingNotif
+  //                 ? Center(child: CircularProgressIndicator())
+  //                 : SingleChildScrollView(
+  //                 child:Container(
 
 
+  //                   child: ListView.builder(
+  //                   itemCount: List_notif.length,
 
-  var List_notif = [];
+  //             shrinkWrap: true,
+  //             itemBuilder: (context,index){
+
+  //               return Container(
+  //                 height: 40,
+  //                 padding: EdgeInsets.all(5),
+  //                 child: Card(
+
+  //                     child: ListTile(
+  //                       leading:  Image.asset(
+  //                       List_notif[index]['IMPORTANCE']=='1' ?"assets/icons/warning.png":List_notif[index]['IMPORTANCE']=='2' ? "assets/icons/warning.png":"assets/icons/warning.png",
+  //                         width: 20.w,
+  //                         height: 20.w,
+  //                       ),
+  //                       title: Text(List_notif[index]['LIBL1'] ,
+  //                       style: TextStyle( color:List_notif[index]['IMPORTANCE']=='2' ? Colors.orange : List_notif[index]['IMPORTANCE']=='3'? Colors.red : Colors.black54 ,
+  //                       fontWeight: FontWeight.w500
+  //                       ),
+  //                       ),
+  //                     ),
+
+  //                 ),
+  //               );
+  //                   }
+  //                   ),
+  //                 )
+
+  //             ),
+  //           ),
+  //         ),
+  //         actions: <Widget>[
+  //           TextButton(
+  //             child:  Text('ok',style: TextStyle(color: Colors.blue[600]!),),
+  //             onPressed: () async {
+
+  //               Navigator.of(context).pop();
+  //             },
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
+  // void _shownotif() {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: Text('Notifications'),
+  //         content: Container(
+  //           width: double.maxFinite,
+  //           child: ListView.builder(
+  //             itemCount: notifications.length,
+  //             itemBuilder: (context, index) {
+  //               final notification = notifications[index];
+  //               return ListTile(
+  //                 title: Text(notification['LIBL1']),
+  //                 subtitle: Text(notification['AFFICHAGETPV']),
+  //                 onTap: () {
+  //                   // No need to mark as read here, as the backend does it automatically
+  //                   Navigator.of(context).pop();
+  //                 },
+  //               );
+  //             },
+  //           ),
+  //         ),
+  //         actions: <Widget>[
+  //           TextButton(
+  //             child: Text('Close'),
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //               // Refresh notifications after closing the dialog
+  //               fetchNotifications();
+  //             },
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
 
-  Future getAllnotif()  async {
-setState(() {
-  loadingNotif=true;
-});
-    http.post(Uri.parse(BaseUrl.get_Notification),
-        headers: {
-          HttpHeaders.authorizationHeader: 'Bearer ${Utils.getToken()}',
-        },
-        body: {
 
 
-          "DOS":Global.getDOS(),
-          "date":DateTime.now().toString(),
+  // var List_notif = [];
 
-        }).then((response) {
-      print('Response status : ${response.statusCode}');
-      print('Response body notif : ${response.body}');
 
-      if (response.statusCode == 200) {
-        var jsonData = json.decode(response.body);
-        setState(() {
-          List_notif = jsonData;
-          //print(SousTypeCLItemlist);
-          counter = List_notif.length;
-          print("counter == ${counter}");
-        });
+//   Future getAllnotif()  async {
+// setState(() {
+//   loadingNotif=true;
+// });
+//     http.post(Uri.parse(BaseUrl.getNotifications),
+//         headers: {
+//           HttpHeaders.authorizationHeader: 'Bearer ${Utils.getToken()}',
+//         },
+//         body: {
 
-      }
-      setState(() {
-        loadingNotif=false;
-      });
-    });
 
-  }
+//           "DOS":Global.getDOS(),
+//           "date":DateTime.now().toString(),
+
+//         }).then((response) {
+//       print('Response status : ${response.statusCode}');
+//       print('Response body notif : ${response.body}');
+
+//       if (response.statusCode == 200) {
+//         var jsonData = json.decode(response.body);
+//         setState(() {
+//           List_notif = jsonData;
+//           //print(SousTypeCLItemlist);
+//           counter = List_notif.length;
+//           print("counter == ${counter}");
+//         });
+
+//       }
+//       setState(() {
+//         loadingNotif=false;
+//       });
+//     });
+
+//   }
 
 
 }

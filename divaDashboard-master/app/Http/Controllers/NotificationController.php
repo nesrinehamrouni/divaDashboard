@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use App\Models\User;
 use App\Jobs\NotificationScheduleJob;
 use Google\Client as GoogleClient;
@@ -70,14 +71,44 @@ class NotificationController extends Controller
                 "success" => false,
             ];
         }
-
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        return [
-            "message" => "Notification sent successfully",
-            "r" => $result,
-            "success" => true,
-        ];
+        Log::info("FCM notification response: $result");
+
+        if ($http_code >= 200 && $http_code < 300) {
+            DB::table('MNOTIFICATION')->insert([
+                'CE1' => '',
+                'NOTIFICATIONCOD' => '',  
+                'LIBL1' => $title,
+                'ACTIFFLG' => 0,
+                'MODEAFFICHAGE' => 0,
+                'CENOTE' => 0,
+                'NOTE' => 0,
+                'IMPORTANCE' => 0,
+                'BLOQUANTFLG' => 0,
+                'MASQUABLEFLG' => 0,
+                'ACTIONFLG' => 0,
+                'AP' => '',
+                'REG' => '',
+                'ORDRE' => 0,
+                'USERCR' => '',
+                'USERMO' => '',
+                'AFFICHAGETPV' => $body
+            ]);
+    
+            return [
+                "message" => "Notification sent successfully",
+                "success" => true
+            ];
+        } else {
+            Log::error("Failed to send notification. HTTP Status Code: $http_code");
+            return [
+                "message" => "Failed to send notification",
+                "success" => false,
+                "http_code" => $http_code
+            ];
+        }
     }
 
     public function testqueues(Request $request)
@@ -92,6 +123,40 @@ class NotificationController extends Controller
                     $user->device_key,
                 )
                 )->delay(now()->addSeconds($user->delay));
+            // dispatch(new FetchNotificationsJob($user->id));
         }
     }
+
+    public function getNotifications(): JsonResponse
+{
+    try {
+        DB::beginTransaction();
+
+        $notification = DB::table('MNOTIFICATION')
+            ->where('ACTIFFLG', 0)
+            ->orderBy('MNOTIFICATION_ID', 'asc')
+            ->lockForUpdate()
+            ->first();
+
+        if ($notification) {
+            // Mark the notification as read immediately
+            DB::table('MNOTIFICATION')
+                ->where('MNOTIFICATION_ID', $notification->MNOTIFICATION_ID)
+                ->update(['ACTIFFLG' => 1]);
+
+            DB::commit();
+
+            \Log::info('Notification fetched and marked as read: ' . json_encode($notification));
+            return response()->json([$notification]);
+        } else {
+            DB::commit();
+            return response()->json([]);
+        }
+    } catch (\Exception $e) {
+        DB::rollBack();
+        \Log::error('Error fetching notification: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to fetch notification'], 500);
+    }
+}
+
 }
