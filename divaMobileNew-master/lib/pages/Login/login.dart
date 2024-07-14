@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../common/theme_helper.dart';
 import '../../../../pages/widgets/header_widget.dart';
@@ -47,9 +48,13 @@ Future<void> _login() async {
     final responseBody = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      // Check if login was successful and user exists
       if (responseBody['status_code'] == 200) {
         print('Login successful');
+        // Store the auth token
+        if (responseBody['token'] != null) {
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_token', responseBody['token']);
+        }
         Fluttertoast.showToast(
           msg: 'Login successful',
           toastLength: Toast.LENGTH_SHORT,
@@ -74,7 +79,7 @@ Future<void> _login() async {
       } else {
         print('Login failed with message: ${responseBody['message']}');
         Fluttertoast.showToast(
-          msg: responseBody['message'],
+          msg: responseBody['message'] ?? 'Login failed',
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.BOTTOM,
         );
@@ -101,7 +106,6 @@ Future<void> _login() async {
     });
   }
 }
-
 
 void _handleLogin() async {
   if (_formKey.currentState!.validate()) {

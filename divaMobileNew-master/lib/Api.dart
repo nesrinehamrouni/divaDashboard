@@ -3,7 +3,7 @@
 class BaseUrl {
 
 
-static const url = 'http://192.168.1.6:8000/api';
+static const url = 'http://192.168.1.2:8000/api';
 
 /*********************************************** user url ***************************/
 static const Login = url + '/auth/login';
@@ -56,7 +56,8 @@ static const getRetour_REP_Ligne = url + "/Retour/getRetour_REP_Ligne";
 
 /************************************* notification ************************************/
 
-static const get_Notification = url + "/Notif/get_Notification";
+static const getNotifications = url + "/getNotifications";
+
 
 /************************************* DOS & ETB ************************************/
 

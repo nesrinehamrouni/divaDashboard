@@ -96,7 +96,10 @@ Route::group(['middleware'=>['auth:sanctum']],function(){
 
     /************************************************** Notif *********************************** */
 
-    Route::post("Notif/get_Notification", [NotificationController::class,'get_Notification']);
+    // Route::post("Notif/get_Notification", [NotificationController::class,'get_Notification']);
+    // Route::get('notifications', [NotificationController::class, 'getNotifications']);
+    Route::get('getNotifications', [NotificationController::class, 'getNotifications'])->withoutMiddleware(['auth:api']);
+    Route::post('markNotificationAsRead/{notificationId}', [NotificationController::class, 'markNotificationAsRead']);
 
     /************************************************** DOS & ETB *********************************** */
 
