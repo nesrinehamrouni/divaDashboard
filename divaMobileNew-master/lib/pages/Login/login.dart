@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:divamobile/Utils.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -28,10 +29,8 @@ class _LoginBtnState extends State<LoginBtn> {
   bool _isLoading = false;
 
 Future<void> _login() async {
-  final String email = emailController.text;  // Trim whitespace
-  final String password = passwordController.text;  // Trim whitespace
-
-  print('Attempting login with email: $email and password: $password');
+  final String email = emailController.text.trim();
+  final String password = passwordController.text.trim();
 
   try {
     final response = await http.post(
@@ -50,17 +49,22 @@ Future<void> _login() async {
     if (response.statusCode == 200) {
       if (responseBody['status_code'] == 200) {
         print('Login successful');
-        // Store the auth token
         if (responseBody['token'] != null) {
+          print('Token received: ${responseBody['token']}');
           SharedPreferences prefs = await SharedPreferences.getInstance();
           await prefs.setString('auth_token', responseBody['token']);
+          await Utils.setToken(responseBody['token']);
+          print('Token saved');
+        } else {
+          print('No token received in login response');
         }
+
         Fluttertoast.showToast(
           msg: 'Login successful',
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.BOTTOM,
         );
-        // Navigate to menu page
+
         Navigator.pushReplacementNamed(context, '/Menu');
       } else if (responseBody['status_code'] == 401) {
         print('Login failed: Incorrect email or password');
@@ -85,7 +89,6 @@ Future<void> _login() async {
         );
       }
     } else {
-      // Handle other HTTP status codes
       print('Login failed with status code: ${response.statusCode}');
       Fluttertoast.showToast(
         msg: 'Login failed with status code: ${response.statusCode}',
@@ -106,6 +109,7 @@ Future<void> _login() async {
     });
   }
 }
+
 
 void _handleLogin() async {
   if (_formKey.currentState!.validate()) {

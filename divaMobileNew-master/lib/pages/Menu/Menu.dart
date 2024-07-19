@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:blurry_modal_progress_hud/blurry_modal_progress_hud.dart';
+import 'package:divamobile/Utils.dart';
+import 'package:divamobile/pages/Menu/Chat/UserListPage.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -39,21 +41,16 @@ class _MenuState extends State<Menu> {
    initState()   {
 
     super.initState();
-    // controller.addListener(scheduleRebuild);
 
     getDOS_ETB();
     // Initial fetch
     fetchNotifications();
     // Set up timer for periodic fetches
-    _timer = Timer.periodic(Duration(minutes: 5), (timer) {
+    _timer = Timer.periodic(Duration(days: 1), (timer) {
       fetchNotifications();
     });
     
   }
-  
-  // Future<void> getNotif() async {
-  //   Notif_Function.notify();
-  // }
 
   Future<void> getDOS_ETB() async {
     final prefs = await SharedPreferences.getInstance();
@@ -352,28 +349,41 @@ void removeNotification(String notificationId) {
                             //     MaterialPageRoute(
                             //         builder: (context) => Filter_FA()));
                           }
-if (title == "Consultation Pièces client") {
-  Navigator.push(
-      context,
-      MaterialPageRoute(
-            builder: (context) => PieceCLI()));
-                            }
-if (title == "Consultation Pièces Fournisseur") {
-  Navigator.push(
-      context,
-      MaterialPageRoute(
-            builder: (context) => PieceFOU()));
-                            }
+                          if (title == "Consultation Pièces client") {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                      builder: (context) => PieceCLI()));
+                                                      }
+                          if (title == "Consultation Pièces Fournisseur") {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                      builder: (context) => PieceFOU()));
+                                                      } },);
+                                              }).toList(),
+                                            ),
+                                          ),
 
 
-                        },);
-                    }).toList(),
-                  ),
-                ),
+                          ],
+                          ),
+                            floatingActionButton: FloatingActionButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => UserListPage()),
+                              );
+                            },
 
-
-              ],
-            ),
+                              child: Icon(Icons.chat),
+                              backgroundColor: Colors.deepOrange,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25)
+                              ),
+                              ),
+                              floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
           ),
         ),
       ),
@@ -465,44 +475,47 @@ if (title == "Consultation Pièces Fournisseur") {
   void scheduleRebuild() => setState(() {});
 
 
-  logout()  async {
+ Future<void> logout() async {
+  try {
+    String? token = await Utils.getToken();
+    print('Token for logout: $token');
 
-    setState(() {
-      isLoading = true;
-    });
-    final prefs = await SharedPreferences.getInstance();
-    http.post(Uri.parse(BaseUrl.Login),
-        headers: {
-          HttpHeaders.authorizationHeader: 'Bearer ${prefs.getString('Token')}',
-        },
-        body:{
-          "email": prefs.getString('Login'),
-          "password": prefs.getString('password'),
+    if (token == null) {
+      print('No token found, user is already logged out');
+      await _handleLogoutSuccess();
+      return;
+    }
 
-        }
-    ).then((response) async {
+    final response = await http.post(
+      Uri.parse('${BaseUrl.Logout}'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
+      },
+    );
 
-      print('Response status : ${response.statusCode}');
-      print('Response body : ${response.body}');
-      if(response.statusCode == 200){
+    print('Logout response status: ${response.statusCode}');
+    print('Logout response body: ${response.body}');
 
-        Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => FirstScreen()), (route) => false);
-
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.remove('Login' );
-        await prefs.remove('password' );
-        await prefs.remove('Token');
-          setState(() {
-            isLoading = !isLoading;
-          });
-
-        }
-
-    });
-
+    if (response.statusCode == 200) {
+      print('Logout successful');
+      await _handleLogoutSuccess();
+    } else if (response.statusCode == 401) {
+      print('User not authenticated on server, clearing local data');
+      await _handleLogoutSuccess();
+    } else {
+      print('Logout failed: ${response.body}');
+    }
+  } catch (e) {
+    print('Error during logout: $e');
+    print('Stack trace: ${StackTrace.current}');
   }
+}
 
+Future<void> _handleLogoutSuccess() async {
+  await Utils.clearToken();
+  Navigator.push(context, MaterialPageRoute(builder: (context) => FirstScreen()));
+}
 
 
 

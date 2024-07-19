@@ -1,23 +1,23 @@
-//import 'models/user.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-abstract class Utils{
-  static String? token;
-  // static User? user;
-  //
-  // static User? getUser(){
-  //   return user;
-  // }
-  //
-  static String? getToken(){
-    return token;
+class Utils {
+  static const String _tokenKey = 'auth_token';
+
+  static Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_tokenKey);
   }
-  //
-  // static User? setUser(User? u){
-  //   Utils.user = u ;
-  // }
 
-  static String? setToken(String? token)  {
-    Utils.token = token;
-    return null;
+  static Future<void> setToken(String? newToken) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (newToken != null) {
+      await prefs.setString(_tokenKey, newToken);
+    } else {
+      await prefs.remove(_tokenKey);
+    }
+  }
+
+  static Future<void> clearToken() async {
+    await setToken(null);
   }
 }

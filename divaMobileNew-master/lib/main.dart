@@ -2,6 +2,7 @@ import 'package:divamobile/Notification/notif.dart';
 import 'package:divamobile/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hexcolor/hexcolor.dart';
@@ -10,7 +11,8 @@ import './pages/Menu/Menu.dart';
 import './pages/splash_screen.dart';
 
 
-void main() async {
+Future main() async {
+  
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(
@@ -20,7 +22,12 @@ void main() async {
   // Initialize notifications
   final notificationSetup = NotificationSetUp();
   await notificationSetup.initializeNotification();
-
+  try {
+    await dotenv.load(fileName: "lib/.env");
+    print('Loaded .env file');
+  } catch (e) {
+    print('Failed to load .env file: $e');
+  }
   runApp(MyApp());
 }
 
