@@ -29,13 +29,11 @@ class AuthController extends Controller{
             'email' => $attrs['email'],
             'phone' => $attrs['phone'],
             'password' => bcrypt($attrs['password']),
-            'remember_token' => Str::random(10) // Initialize with a random string first
+            'remember_token' => Str::random(10) 
         ]);
     
-        // Generate token
         $token = $user->createToken('secret')->plainTextToken;
     
-        // Update remember_token field with the generated token
         $user->update(['remember_token' => $token]);
     
         $verificationCode = $user->generateVerificationCode();
@@ -54,7 +52,6 @@ class AuthController extends Controller{
 {
   Log::info('Login request:', $request->all());
 
-    // Validate the request
     $validator = Validator::make($request->all(), [
         'email' => 'required',
         'password' => 'required'
@@ -64,7 +61,6 @@ class AuthController extends Controller{
         return response()->json(['status_code' => 400, 'message' => 'Bad Request']);
     }
 
-    // Check if the user exists in the external database
     $ExistUserX = DB::select("SELECT CASE WHEN EXISTS(SELECT 1 FROM MUSER WHERE USERX = '" . strtoupper($request->email) . "')THEN 1 ELSE 0 END as EXIST;");
 
     if ($ExistUserX[0]->EXIST == 0) {
@@ -84,9 +80,8 @@ class AuthController extends Controller{
 
     // Retrieve the authenticated user and generate an authentication token
     $user = User::where('email', strtoupper($request->email))->first();
-    $tokenResult = $user->createToken('authToken')->plainTextToken;
+    $tokenResult = $user->remember_token;
 
-    // Return the response with the token
     return response()->json([
         'status_code' => 200,
         'token' => $tokenResult,
@@ -94,23 +89,79 @@ class AuthController extends Controller{
     ]);
 }
 
-    public function logout()
-    {
-        auth()->user()->tokens()->delete();
-            return response([
-                'message' => 'Logout success'
-            ],200); 
+public function logout(Request $request)
+{
+    try {
+        $user = auth()->user();
+        
+        if (!$user) {
+            \Log::warning('Logout attempted with no authenticated user');
+            return response()->json([
+                'status' => 'warning',
+                'message' => 'No authenticated user found'
+            ], 401);
+        }
+
+        // Revoke all tokens...
+        $user->tokens()->delete();
+        
+        // Clear the remember_token
+        $user->update(['remember_token' => null]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Logged out successfully'
+        ], 200);
+    } catch (\Exception $e) {
+        \Log::error('Logout error: ' . $e->getMessage());
+        
+        return response()->json([
+            'status' => 'error',
+            'message' => 'An error occurred during logout',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
-
-
-    public function get_user(){
-
-        return response([
-            'user' => auth()->user()
-        ],200);
+ 
+    public function get_user()
+{
+    try {
+        $users = User::where('id', '!=', auth()->id())
+                     ->whereNotNull('id')
+                     ->whereNotNull('nom')
+                     ->whereNotNull('email')
+                     ->get(['id', 'nom', 'email']);
+        
+        return response()->json($users);
+    } catch (\Exception $e) {
+        \Log::error('Error in get_user: ' . $e->getMessage());
+        \Log::error('Stack trace: ' . $e->getTraceAsString());
+        return response()->json([
+            'error' => 'An error occurred while fetching users',
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ], 500);
     }
+}
 
+public function getCurrentUserId(Request $request)
+{
+    try {
+        $token = $request->bearerToken();
+        $user = User::where('remember_token', $token)->first();
+
+        if ($user) {
+            return response()->json(['user_id' => $user->id], 200);
+        } else {
+            return response()->json(['message' => 'User not authenticated'], 401);
+        }
+    } catch (\Exception $e) {
+        \Log::error('Error in getCurrentUserId: ' . $e->getMessage());
+        return response()->json(['error' => 'An error occurred while fetching user ID'], 500);
+    }
+}
 
 
     public function destroy(Request $req){

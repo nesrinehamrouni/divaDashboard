@@ -35,6 +35,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('auth/register',[AuthController::class,'register']);
 Route::post('auth/login', [AuthController::class, 'login'])->name('login');
 Route::post('auth/verify', [VerificationmailController::class,'verifyCode']);
+Route::post("auth/logout", [AuthController::class, 'logout']);
+Route::get('users', [AuthController::class, 'get_user']);
+Route::get('current_user_id', [AuthController::class, 'getCurrentUserId']);
 
 Route::post('notify', [NotificationController::class,'testqueues']);
 
@@ -48,7 +51,6 @@ Route::group(['middleware'=>['auth:sanctum']],function(){
     
     Route::post("/verif_password", [AuthController::class, 'passwordverif']);
     Route::get("/get_user", [AuthController::class, 'get_user']);
-    Route::post("/logout", [AuthController::class, 'logout']);
     Route::post("ChiffreAffaire", [ChiffreAffaireController::class,'list']);
     Route::post("ChiffreAffaire/listDetail", [ChiffreAffaireController::class,'list_CA_Detail']);
     Route::get("ChiffreAffaire/get_payeur", [ChiffreAffaireController::class,'get_payeur']);
