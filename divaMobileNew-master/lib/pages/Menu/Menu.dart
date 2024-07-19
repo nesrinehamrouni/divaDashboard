@@ -21,6 +21,7 @@ import '../../pieceCLI/PieceCLI.dart';
 import '../Login/Choix_DOS_ETB.dart';
 import '../Login/firstScreen.dart';
 import 'MenuBI.dart';
+import '../session_manager.dart';
 
 class Menu extends StatefulWidget {
   @override
@@ -35,6 +36,7 @@ class _MenuState extends State<Menu> {
   void initState() {
     super.initState();
     controller.addListener(scheduleRebuild);
+    checkLoginState();
     getDOS_ETB();
     getAllnotif();
 
@@ -51,11 +53,24 @@ class _MenuState extends State<Menu> {
     };
   }
 
-  @override
+  Future<void> checkLoginState() async {
+    bool isLoggedIn = await SessionManager.isLoggedIn();
+    if (!isLoggedIn) {
+      _navigateToLoginScreen();
+    }
+  }
+ @override
   void dispose() {
     controller.removeListener(scheduleRebuild);
     super.dispose();
   }
+
+  void scheduleRebuild() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
 
   Future<void> getDOS_ETB() async {
     final prefs = await SharedPreferences.getInstance();
@@ -64,6 +79,12 @@ class _MenuState extends State<Menu> {
     }
     if (prefs.getString('ETB') != null) {
       Global.set_ETB(prefs.getString('ETB')!);
+    }
+    
+    // Use SessionManager to get the token
+    String? token = await SessionManager.getToken();
+    if (token != null) {
+      Utils.setToken(token);
     }
   }
 
@@ -280,23 +301,19 @@ class _MenuState extends State<Menu> {
     );
   }
 
-  void scheduleRebuild() => setState(() {});
-
   Future<void> logout() async {
     setState(() {
       isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('Token');
-
-    if (token == null) {
-      await _clearLocalData();
-      _navigateToLoginScreen();
-      return;
-    }
-
     try {
+      String? token = await SessionManager.getToken();
+      if (token == null) {
+        await _clearLocalData();
+        _navigateToLoginScreen();
+        return;
+      }
+
       final response = await http.post(
         Uri.parse(BaseUrl.Logout),
         headers: {
@@ -309,27 +326,29 @@ class _MenuState extends State<Menu> {
         await _clearLocalData();
         _navigateToLoginScreen();
       } else {
-        print('Logout failed: ${response.body}');
-        // Show an error message to the user
+        _showSnackBar('Logout failed. Please try again.');
       }
     } catch (e) {
       print('Error during logout: $e');
-      // Show an error message to the user
+      _showSnackBar('An error occurred. Please try again.');
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
   Future<void> _clearLocalData() async {
+    await SessionManager.setLoggedIn(false);
+    await SessionManager.setToken(null);
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('Login');
-    await prefs.remove('password');
     await prefs.remove('Token');
     await prefs.remove('DOS');
     await prefs.remove('ETB');
-    // Clear any other relevant data
   }
 
   void _navigateToLoginScreen() {
@@ -339,6 +358,11 @@ class _MenuState extends State<Menu> {
     );
   }
 
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
   Future<void> _showMyDialog() async {
     return showDialog<void>(
       context: context,
@@ -441,10 +465,11 @@ class _MenuState extends State<Menu> {
     });
 
     try {
+      String? token = await SessionManager.getToken();
       final response = await http.post(
-        Uri.parse(BaseUrl.get_Notification),
+        Uri.parse(BaseUrl.getNotifications),
         headers: {
-          HttpHeaders.authorizationHeader: 'Bearer ${Utils.getToken()}',
+          HttpHeaders.authorizationHeader: 'Bearer $token',
         },
         body: {
           "DOS": Global.getDOS(),

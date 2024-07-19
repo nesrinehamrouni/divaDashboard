@@ -45,10 +45,9 @@ Route::post("ChiffreAffaire/getCA_ShowRoom", [ChiffreAffaireController::class,'g
 
 
 Route::group(['middleware'=>['auth:sanctum']],function(){
-    
+    Route::post('/logout', [AuthController::class, 'logout']);
     Route::post("/verif_password", [AuthController::class, 'passwordverif']);
     Route::get("/get_user", [AuthController::class, 'get_user']);
-    Route::post("/logout", [AuthController::class, 'logout']);
     Route::post("ChiffreAffaire", [ChiffreAffaireController::class,'list']);
     Route::post("ChiffreAffaire/listDetail", [ChiffreAffaireController::class,'list_CA_Detail']);
     Route::get("ChiffreAffaire/get_payeur", [ChiffreAffaireController::class,'get_payeur']);

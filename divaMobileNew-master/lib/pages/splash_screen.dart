@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../Utils.dart';
+import 'session_manager.dart';
 import 'Login/firstScreen.dart';
 import 'Menu/Menu.dart';
 
@@ -46,30 +47,29 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _sendTokenToServer(String token) async {
-  try {
-    final response = await http.post(
-      Uri.parse(BaseUrl.Notify),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-        HttpHeaders.authorizationHeader: 'Bearer ${Utils.getToken()}',
-      },
-      body: jsonEncode(<String, String>{
-        'fcm_token': token,
-      }),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse(BaseUrl.Notify),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          HttpHeaders.authorizationHeader: 'Bearer ${Utils.getToken()}',
+        },
+        body: jsonEncode(<String, String>{
+          'fcm_token': token,
+        }),
+      );
 
-    if (response.statusCode == 200) {
-      debugPrint('FCM token successfully sent to server');
-    } else {
-      debugPrint('Failed to send FCM token to server. Status code: ${response.statusCode}');
-      // Handle other status codes if needed
+      if (response.statusCode == 200) {
+        debugPrint('FCM token successfully sent to server');
+      } else {
+        debugPrint('Failed to send FCM token to server. Status code: ${response.statusCode}');
+        // Handle other status codes if needed
+      }
+    } catch (e) {
+      debugPrint('Error sending FCM token to server: $e');
+      // Handle network or other exceptions
     }
-  } catch (e) {
-    debugPrint('Error sending FCM token to server: $e');
-    // Handle network or other exceptions
   }
-}
-
 
   void _initializeApp() {
     Timer(const Duration(milliseconds: 2000), () async {
@@ -79,10 +79,16 @@ class _SplashScreenState extends State<SplashScreen> {
           setState(() {
             Utils.setToken(prefs.getString('Token'));
           });
+          // Update SessionManager
+          await SessionManager.setToken(prefs.getString('Token')!);
+          await SessionManager.setLoggedIn(true);
         }
         Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => Menu()), (route) => false);
       } else {
+        // Ensure SessionManager is updated
+        await SessionManager.setLoggedIn(false);
+        await SessionManager.setToken(null);
         Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => FirstScreen()), (route) => false);
       }
@@ -102,11 +108,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
       decoration: new BoxDecoration(
         gradient: new LinearGradient(
-          colors: [Color(0xFF2f3b46),Color(0xFF2f3b46)],
+          colors: [Color(0xFF2f3b46), Color(0xFF2f3b46)],
           begin: const FractionalOffset(0, 0),
           end: const FractionalOffset(1.0, 0.0),
           stops: [0.0, 1.0],
@@ -120,8 +125,9 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Container(
             height: 140.0,
             width: 140.0,
-            child:  Image(image: AssetImage('assets/images/Divalto_logo.png'),
-              )
+            child: Image(
+              image: AssetImage('assets/images/Divalto_logo.png'),
+            ),
           ),
         ),
       ),

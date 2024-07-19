@@ -6,6 +6,7 @@ import '../../../../common/theme_helper.dart';
 import '../../../../pages/widgets/header_widget.dart';
 import '../../Api.dart';
 import '../registration_page.dart';
+import '../session_manager.dart';
 
 class LoginBtn extends StatefulWidget {
   final bool isSmall;
@@ -29,49 +30,52 @@ class _LoginBtnState extends State<LoginBtn> {
   bool _passwordVisible = true;
 
   Future<void> _login() async {
-    final String email = emailController.text.trim();
-    final String password = passwordController.text.trim();
+  final String email = emailController.text.trim();
+  final String password = passwordController.text.trim();
 
-    print('Attempting login with email: $email and password: $password');
+  print('Attempting login with email: $email and password: $password');
 
-    try {
-      final response = await http.post(
-        Uri.parse(BaseUrl.Login),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'email': email,
-          'password': password,
-        }),
-      );
+  try {
+    final response = await http.post(
+      Uri.parse(BaseUrl.Login),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'email': email,
+        'password': password,
+      }),
+    );
 
-      final responseBody = jsonDecode(response.body);
+    final responseBody = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
-        if (responseBody['status_code'] == 200) {
-          print('Login successful');
-          _showSnackBar('Login successful', Colors.green);
-          Navigator.pushReplacementNamed(context, '/Menu');
-        } else if (responseBody['status_code'] == 401) {
-          print('Login failed: Incorrect email or password');
-          _showSnackBar("Adresse e-mail ou mot de passe incorrect.", Colors.red);
-        } else if (responseBody['status_code'] == 404) {
-          print('Login failed: User does not exist');
-          _showSnackBar("L'utilisateur n'existe pas. Vérifiez votre saisie.", Colors.red);
-        } else {
-          print('Login failed with message: ${responseBody['message']}');
-          _showSnackBar(responseBody['message'], Colors.red);
-        }
+    if (response.statusCode == 200) {
+      if (responseBody['status_code'] == 200) {
+        print('Login successful');
+        // Save login state and token
+        await SessionManager.setLoggedIn(true);
+        await SessionManager.setToken(responseBody['token']); // Assuming the token is in the response
+        _showSnackBar('Login successful', Colors.green);
+        Navigator.pushReplacementNamed(context, '/Menu');
+      } else if (responseBody['status_code'] == 401) {
+        print('Login failed: Incorrect email or password');
+        _showSnackBar("Adresse e-mail ou mot de passe incorrect.", Colors.red);
+      } else if (responseBody['status_code'] == 404) {
+        print('Login failed: User does not exist');
+        _showSnackBar("L'utilisateur n'existe pas. Vérifiez votre saisie.", Colors.red);
       } else {
-        print('Login failed with status code: ${response.statusCode}');
-        _showSnackBar('Login failed with status code: ${response.statusCode}', Colors.red);
+        print('Login failed with message: ${responseBody['message']}');
+        _showSnackBar(responseBody['message'], Colors.red);
       }
-    } catch (e) {
-      print('Login error: $e');
-      _showSnackBar('Server error: $e', Colors.red);
+    } else {
+      print('Login failed with status code: ${response.statusCode}');
+      _showSnackBar('Login failed with status code: ${response.statusCode}', Colors.red);
     }
+  } catch (e) {
+    print('Login error: $e');
+    _showSnackBar('Server error: $e', Colors.red);
   }
+}
 
   void _showSnackBar(String message, Color color) {
     final snackBar = SnackBar(

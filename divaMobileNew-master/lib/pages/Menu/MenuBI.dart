@@ -288,51 +288,47 @@ class _MenuState extends State<Menu_BI> {
 
   bool isLoading = false;
 
-  logout()  async {
+  // logout()  async {
 
-    setState(() {
-      isLoading = true;
-    });
-    final prefs = await SharedPreferences.getInstance();
-    String myUrl = BaseUrl.Login;
-    http.post(Uri.parse(myUrl),
-        headers: {
-          HttpHeaders.authorizationHeader: 'Bearer ${prefs.getString('Token')}',
-        },
-        body:{
-          "email": prefs.getString('Login'),
-          "password": prefs.getString('password'),
+  //   setState(() {
+  //     isLoading = true;
+  //   });
+  //   final prefs = await SharedPreferences.getInstance();
+  //   String myUrl = BaseUrl.Login;
+  //   http.post(Uri.parse(myUrl),
+  //       headers: {
+  //         HttpHeaders.authorizationHeader: 'Bearer ${prefs.getString('Token')}',
+  //       },
+  //       body:{
+  //         "email": prefs.getString('Login'),
+  //         "password": prefs.getString('password'),
 
-        }
-    ).then((response) async {
+  //       }
+  //   ).then((response) async {
 
-      print('Response status : ${response.statusCode}');
-      print('Response body : ${response.body}');
-      if(response.statusCode == 200){
+  //     print('Response status : ${response.statusCode}');
+  //     print('Response body : ${response.body}');
+  //     if(response.statusCode == 200){
 
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => FirstScreen()));
+  //       Navigator.push(
+  //           context,
+  //           MaterialPageRoute(
+  //               builder: (context) => FirstScreen()));
 
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.remove('Login' );
-        await prefs.remove('password' );
-        await prefs.remove('Token');
-        setState(() {
-          isLoading = !isLoading;
-        });
+  //       final prefs = await SharedPreferences.getInstance();
+  //       await prefs.remove('Login' );
+  //       await prefs.remove('password' );
+  //       await prefs.remove('Token');
+  //       setState(() {
+  //         isLoading = !isLoading;
+  //       });
 
-      }
+  //     }
 
-    });
+  //   });
 
   }
 
 
-
-
-
-}
 
 

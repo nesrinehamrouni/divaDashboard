@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log; 
+use Laravel\Sanctum\PersonalAccessToken;
+
 
 class AuthController extends Controller{
     public function register(Request $request){
@@ -55,7 +58,7 @@ public function login(Request $request)
     }
 
     // Check if the user exists in the external database
-    $ExistUserX = DB::select("SELECT CASE WHEN EXISTS(SELECT 1 FROM MUSER WHERE EMAIL = '" . strtoupper($request->email) . "')THEN 1 ELSE 0 END as EXIST;");
+    $ExistUserX = DB::select("SELECT CASE WHEN EXISTS(SELECT 1 FROM MUSER WHERE USERX = '" . strtoupper($request->email) . "')THEN 1 ELSE 0 END as EXIST;");
 
     if ($ExistUserX[0]->EXIST == 0) {
         return response()->json(['status_code' => 404, 'message' => 'User does not exist']);
@@ -83,14 +86,29 @@ public function login(Request $request)
         'message' => 'Authenticated'
     ]);
 }
-public function logout()
-{
-    auth()->user()->tokens()->delete();
-        return response([
-            'message' => 'Logout success'
-        ],200); 
-}
+// public function logoutAll()
+// {
+//    /** @var \App\Models\User $user */
+//     $user = auth()->user();
+//     $user->tokens()->delete();
 
+//     return response()->json([
+//         'message' => 'Logged out from all devices successfully'
+//     ], 200);
+// }
+public function logout(Request $request)
+{
+    Log::info('Logout attempt', ['user' => $request->user()->id]);
+    
+    try {
+        $request->user()->currentAccessToken()->delete();
+        Log::info('User logged out successfully');
+        return response()->json(['message' => 'Successfully logged out']);
+    } catch (\Exception $e) {
+        Log::error('Error during logout', ['error' => $e->getMessage()]);
+        return response()->json(['message' => 'Error during logout'], 500);
+    }
+}
 
 
 public function get_user(){

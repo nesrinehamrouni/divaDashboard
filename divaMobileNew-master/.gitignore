@@ -9,6 +9,11 @@
 .history
 .svn/
 migrate_working_dir/
+.vscode/
+/android/app/google-services.json
+/android/gradle/wrapper/gradle-wrapper.properties
+/firebase.json
+**/.env
 
 # IntelliJ related
 *.iml

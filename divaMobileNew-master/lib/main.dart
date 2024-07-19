@@ -8,6 +8,7 @@ import 'package:hexcolor/hexcolor.dart';
 
 import './pages/Menu/Menu.dart';
 import './pages/splash_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 
 void main() async {
@@ -20,7 +21,15 @@ void main() async {
   // Initialize notifications
   final notificationSetup = NotificationSetUp();
   await notificationSetup.initializeNotification();
-
+  try{
+    await dotenv.load(fileName: "/lib.env");
+    print('Loaded .env file');
+  }
+  
+  catch(e)
+  {
+    print("Failed to load .env file : $e");
+  }
   runApp(MyApp());
 }
 
@@ -28,7 +37,7 @@ class MyApp extends StatelessWidget {
   MyApp({Key? key}) : super(key: key);
 
   final Map<String, WidgetBuilder> routes = {
-    '/Menu': (context) => Menu(),
+    '/Menu': (context) => Menu()
   };
 
   static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
