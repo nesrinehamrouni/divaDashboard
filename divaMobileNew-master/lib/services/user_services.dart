@@ -42,5 +42,3 @@ Future<ApiResponse> register(String nom,String prenom, String email,String phone
   }
   return apiResponse;
 }
-
-
