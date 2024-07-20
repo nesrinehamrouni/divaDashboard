@@ -32,7 +32,7 @@ class _UserListPageState extends State<UserListPage> {
     }
 
     final response = await http.get(
-      Uri.parse(BaseUrl.getCurrentUserId),
+      Uri.parse(BaseUrl.GetCurrentUserId),
       headers: {
         'Accept': 'application/json',
         'Authorization': 'Bearer $token',
@@ -65,7 +65,7 @@ class _UserListPageState extends State<UserListPage> {
       // Fetch current user ID
       int? currentUserId = await fetchCurrentUserId();
 
-      final response = await http.get(Uri.parse(BaseUrl.getUsers), headers: {
+      final response = await http.get(Uri.parse(BaseUrl.GetUsers), headers: {
         'Accept': 'application/json',
       });
 
