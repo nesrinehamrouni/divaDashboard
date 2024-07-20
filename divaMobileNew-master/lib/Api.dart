@@ -13,8 +13,8 @@ static final String Register = url + '/auth/register';
 static final String Logout = url + '/auth/logout';
 static final String Verify = url + '/auth/verify';
 static final String Notify = url + '/notify';
-static final String getUsers = url + '/users';
-static final String getCurrentUserId = url + '/current_user_id';
+static final String GetUsers = url + '/users';
+static final String GetCurrentUserId = url + '/current_user_id';
 
 /*********************************************** Chiffre Affaire url ***************************/
 
