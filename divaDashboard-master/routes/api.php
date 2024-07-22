@@ -14,6 +14,7 @@ use App\Http\Controllers\Etat_RetourController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\DOS_ETBController;
 use App\Http\Controllers\DepotController;
+use App\Http\Controllers\VerificationmailController;
 
 /*
 |--------------------------------------------------------------------------
