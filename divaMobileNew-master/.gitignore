@@ -32,10 +32,8 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
-/lib/.env
 /firebase.json
-
-
+/lib/.env
 # Symbolication related
 app.*.symbols
 
