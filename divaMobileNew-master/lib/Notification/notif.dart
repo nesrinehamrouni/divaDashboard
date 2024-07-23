@@ -139,7 +139,6 @@ static Future<void> onActionReceivedMethod(ReceivedAction receivedAction) async 
     ));
     return;
   }
-  
   if (receivedAction.payload?['screen'] == 'tableau_de_bord') {
     print("Navigating to tableau_de_bord from action");
     MyApp.navigatorKey.currentState?.pushReplacement(MaterialPageRoute(
