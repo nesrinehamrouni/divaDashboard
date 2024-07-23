@@ -34,7 +34,7 @@ class NotificationScheduleJob implements ShouldQueue
      * @var string
      */
     protected $key;
-
+    protected $click_action;
     /**
      * Create a new job instance.
      *
@@ -44,11 +44,12 @@ class NotificationScheduleJob implements ShouldQueue
      * @return void
      */
   
-    public function __construct($title, $body, $key)
+    public function __construct($title, $body, $key, $click_action = 'FLUTTER_NOTIFICATION_CLICK')
     {
         $this->title = $title;
         $this->body = $body;
         $this->key = $key;
+        $this->click_action = $click_action;
     }
 
     /**
@@ -59,7 +60,7 @@ class NotificationScheduleJob implements ShouldQueue
     public function handle()
     {
     Log::info("Entering handle function of NotificationScheduleJob");    
-    NotificationController::notify($this->title, $this->body, $this->key);
+    NotificationController::notify($this->title, $this->body, $this->key, $this->click_action);
         
     }
 }

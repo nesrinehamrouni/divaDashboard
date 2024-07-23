@@ -12,7 +12,7 @@ use Google\Client as GoogleClient;
 
 class NotificationController extends Controller
 {
-    static public function notify($title, $body, $device_key)
+    static public function notify($title, $body, $device_key, $click_action ='FLUTTER_NOTIFICATION_CLICK')
     {
         $url = "https://fcm.googleapis.com/v1/projects/laravelnotif-ec82d/messages:send";
         $credentialsFilePath = "public/json/laravelnotif-ec82d-5ce5b0db9483.json";
@@ -31,9 +31,11 @@ class NotificationController extends Controller
                     "body" => $body,
                 ],
                 "data" => [
-                    "click_action" => "FLUTTER_NOTIFICATION_CLICK",
-                    "status" => "done",
-                ],
+                "click_action" => $click_action,
+                "sound"=> "default", 
+                "status"=> "done",
+                "screen"=> "tableau_de_bord"
+            ],
                 "android" => [
                     "priority" => "high",
                     "notification" => [
@@ -121,6 +123,7 @@ class NotificationController extends Controller
                     $user->nom,
                     $user->email,
                     $user->device_key,
+
                 )
                 )->delay(now()->addSeconds($user->delay));
             // dispatch(new FetchNotificationsJob($user->id));
