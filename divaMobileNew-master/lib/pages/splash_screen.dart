@@ -22,7 +22,6 @@ class SplashScreen extends StatefulWidget {
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
-
 class _SplashScreenState extends State<SplashScreen> {
   bool _isVisible = false;
   final NotificationSetUp _noti = NotificationSetUp();
