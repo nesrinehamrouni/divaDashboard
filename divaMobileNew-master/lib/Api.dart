@@ -7,6 +7,7 @@ class BaseUrl {
 
 static final String url = dotenv.env['API_BASE_URL'] ?? 'http://default_url';
 
+
 /*********************************************** user url ***************************/
 static final String Login = url + '/auth/login';
 static final String Register = url + '/auth/register';
