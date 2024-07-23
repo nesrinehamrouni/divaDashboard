@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:divamobile/main.dart';
+import 'package:divamobile/pages/Menu/MenuBI.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -38,44 +40,57 @@ class NotificationSetUp {
       badge: true,
       sound: true,
     );
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    _handleNotification(message, context);
+  });
 
     if (Platform.isIOS) await getIOSPermission();
 
     FirebaseMessaging.onBackgroundMessage(myBackgroundMessageHandler);
 
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      print("Received message: ${message.notification?.body}");
-      if (message.notification != null) {
-        await createOrderNotifications(
-          title: message.notification!.title,
-          body: message.notification!.body,
-        );
-      }
+    FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
+    if (message != null) {
+      _handleNotification(message, context);
+    }
+  });
 
-      // Increment notification counter
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+    print("Received message while app is in foreground: ${message.notification?.body}");
+    if (message.notification != null) {
+      await createOrderNotifications(
+        title: message.notification!.title,
+        body: message.notification!.body,
+      );
+    }
+    _handleNotification(message,context);
+
+
       SharedPreferences prefs = await SharedPreferences.getInstance();
       int counter = prefs.getInt('notification_counter') ?? 0;
       counter++;
       await prefs.setInt('notification_counter', counter);
       NotificationController.notificationCounter = counter;
 
-      // Trigger a rebuild to update the notification badge
       NotificationController.notificationListener?.call();
     });
 
-    // Get the token and send it to your server
     String? token = await _firebaseMessaging.getToken();
     if (token != null) {
       print("FCM Token: $token");
-      // TODO: Send this token to your server
     }
 
-    // Listen for token refreshes
     _firebaseMessaging.onTokenRefresh.listen((String token) {
       print("FCM Token refreshed: $token");
-      // TODO: Send this refreshed token to your server
     });
   }
+
+  void _handleNotification(RemoteMessage message, BuildContext context) {
+  if (message.data['screen'] == 'tableau_de_bord') {
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+      builder: (context) => Menu_BI(),
+    ));
+  }
+}
 
   Future<void> createOrderNotifications({String? title, String? body}) async {
     await AwesomeNotifications().createNotification(
@@ -115,8 +130,23 @@ class NotificationController {
   static VoidCallback? notificationListener;
 
   @pragma("vm:entry-point")
-  static Future<void> onActionReceivedMethod(ReceivedAction receivedAction) async {
-    print("Notification action received: ${receivedAction.id}");
-
+static Future<void> onActionReceivedMethod(ReceivedAction receivedAction) async {
+  
+  if (receivedAction.payload == null) {
+    print("Warning: Received action payload is null");
+    MyApp.navigatorKey.currentState?.pushReplacement(MaterialPageRoute(
+      builder: (context) => Menu_BI(),
+    ));
+    return;
   }
+  
+  if (receivedAction.payload?['screen'] == 'tableau_de_bord') {
+    print("Navigating to tableau_de_bord from action");
+    MyApp.navigatorKey.currentState?.pushReplacement(MaterialPageRoute(
+      builder: (context) => Menu_BI(),
+    ));
+  } else {
+    print("Unexpected payload content: ${receivedAction.payload}");
+  }
+}
 }

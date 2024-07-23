@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:divamobile/Api.dart';
 import 'package:divamobile/Notification/notif.dart';
+import 'package:divamobile/pages/Menu/MenuBI.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -33,8 +34,36 @@ class _SplashScreenState extends State<SplashScreen> {
     _noti.eventListenerCallback(context);
     _getFirebaseToken();
     _initializeApp();
+  _checkForInitialMessage();
   }
 
+  Future<void> _checkForInitialMessage() async {
+    RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+    if (initialMessage != null) {
+      _handleNotification(initialMessage);
+    }
+  }
+
+  void _handleNotification(RemoteMessage message) {
+  print("Received notification: ${message.data}");
+  if (message.data['target_page'] == 'tableau_de_bord') {
+    print("Navigating to tableau_de_bord");
+    _navigateToTableauDeBord();
+  } else {
+    print("Unknown or missing target_page/screen: ${message.data}");
+    _navigateToTableauDeBord();
+  }
+}
+
+  void _navigateToTableauDeBord() {
+  // Use a slight delay to ensure the widget tree is built
+  Future.delayed(Duration.zero, () {
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+      builder: (context) => Menu_BI(),
+    ));
+  });
+}
+  
   Future<void> _getFirebaseToken() async {
     if (Platform.isAndroid || Platform.isIOS) {
       final String? token = await FirebaseMessaging.instance.getToken();
