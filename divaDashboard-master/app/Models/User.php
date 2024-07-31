@@ -19,13 +19,14 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'nom',
-        'prenom',
-        'email',
-        'phone',
-        'password',
-        'remember_token'
-    ];
+      'nom',
+      'prenom',
+      'email',
+      'phone',
+      'password',
+      'remember_token',
+      'profile_image',
+  ];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -56,3 +57,4 @@ class User extends Authenticatable
         return $verificationCode;
     }
 }
+

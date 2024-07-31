@@ -15,7 +15,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\DOS_ETBController;
 use App\Http\Controllers\DepotController;
 use App\Http\Controllers\VerificationmailController;
-
+use App\Http\Controllers\PhoneVerificationController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -39,6 +39,10 @@ Route::post('auth/verify', [VerificationmailController::class,'verifyCode']);
 Route::post("auth/logout", [AuthController::class, 'logout']);
 Route::get('users', [AuthController::class, 'get_user']);
 Route::get('current_user_id', [AuthController::class, 'getCurrentUserId']);
+Route::post('/send-verification-code', [VerificationmailController::class, 'sendVerificationCode']);
+Route::post('/verify-code', [VerificationmailController::class, 'verifyCode']);
+Route::post('/auth/resend-verification-code', [VerificationmailController::class, 'resendVerificationCode']);
+
 
 Route::post('notify', [NotificationController::class,'testqueues']);
 

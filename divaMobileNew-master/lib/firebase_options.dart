@@ -50,17 +50,17 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'FSZsC0OcwEk-Tt2QA4gBcZDj3gvxCFZAcSXdVORmeuk',
-    appId: '1:23481155335:android:984e000256a24c95d6cfa2',
-    messagingSenderId: '23481155335',
+    apiKey: 'AIzaSyAYwk1dNKYbRJ_LAo8-ugVrtMZSlkvHwbc',
+    appId: '1:855277218381:android:0f7cfed143ce58ddc38a04',
+    messagingSenderId: '855277218381',
     projectId: 'laranotify-99086',
     storageBucket: 'laranotify-99086.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'FSZsC0OcwEk-Tt2QA4gBcZDj3gvxCFZAcSXdVORmeuk',
-    appId: '1:23481155335:ios:dfb07a89d7a59c60d6cfa2',
-    messagingSenderId: '23481155335',
+    apiKey: 'AIzaSyAYwk1dNKYbRJ_LAo8-ugVrtMZSlkvHwbc',
+    appId: '1:855277218381:ios:0f7cfed143ce58ddc38a04',
+    messagingSenderId: '855277218381',
     projectId: 'laranotify-99086',
     storageBucket: 'laranotify-99086.appspot.com',
     iosBundleId: 'com.example.divamobile',

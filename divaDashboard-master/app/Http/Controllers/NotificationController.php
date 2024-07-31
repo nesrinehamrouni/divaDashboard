@@ -12,10 +12,10 @@ use Google\Client as GoogleClient;
 
 class NotificationController extends Controller
 {
-    static public function notify($title, $body, $device_key)
+    static public function notify($title, $body, $device_key, $click_action ='FLUTTER_NOTIFICATION_CLICK')
     {
-        $url = "https://fcm.googleapis.com/v1/projects/laravelnotif-ec82d/messages:send";
-        $credentialsFilePath = "public/json/laravelnotif-ec82d-5ce5b0db9483.json";
+        $url = "https://fcm.googleapis.com/v1/projects/laranotify-99086/messages:send";
+        $credentialsFilePath = "public/json/laranotify-99086-1af7c591118e.json";
         $client = new GoogleClient();
         $client->setAuthConfig($credentialsFilePath);
         $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
@@ -31,9 +31,11 @@ class NotificationController extends Controller
                     "body" => $body,
                 ],
                 "data" => [
-                    "click_action" => "FLUTTER_NOTIFICATION_CLICK",
-                    "status" => "done",
-                ],
+                "click_action" => $click_action,
+                "sound"=> "default", 
+                "status"=> "done",
+                "screen"=> "tableau_de_bord"
+            ],
                 "android" => [
                     "priority" => "high",
                     "notification" => [
@@ -121,6 +123,7 @@ class NotificationController extends Controller
                     $user->nom,
                     $user->email,
                     $user->device_key,
+
                 )
                 )->delay(now()->addSeconds($user->delay));
             // dispatch(new FetchNotificationsJob($user->id));
@@ -146,7 +149,7 @@ class NotificationController extends Controller
 
             DB::commit();
 
-            \Log::info('Notification fetched and marked as read: ' . json_encode($notification));
+            Log::info('Notification fetched and marked as read: ' . json_encode($notification));
             return response()->json([$notification]);
         } else {
             DB::commit();
@@ -154,7 +157,7 @@ class NotificationController extends Controller
         }
     } catch (\Exception $e) {
         DB::rollBack();
-        \Log::error('Error fetching notification: ' . $e->getMessage());
+        Log::error('Error fetching notification: ' . $e->getMessage());
         return response()->json(['error' => 'Failed to fetch notification'], 500);
     }
 }

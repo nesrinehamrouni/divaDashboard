@@ -11,42 +11,67 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
 
+
 class AuthController extends Controller{
 
-    public function register(Request $request){
-        
+  
+// 
+public function register(Request $request){
+  try {
+      Log::info('Register function called');
 
-        $attrs = $request->validate([
-            'nom' => 'required|string',
-            'prenom' => 'required|string',
-            'email' => 'required|email|unique:users,email',
-            'phone' => 'required|digits:8|unique:users,phone',
-            'password' => 'required|min:6|confirmed'
-        ]);
-        $user = User::create([
-            'nom'=> $attrs['nom'],
-            'prenom' => $attrs['prenom'],
-            'email' => $attrs['email'],
-            'phone' => $attrs['phone'],
-            'password' => bcrypt($attrs['password']),
-            'remember_token' => Str::random(10) 
-        ]);
-    
-        $token = $user->createToken('secret')->plainTextToken;
-    
-        $user->update(['remember_token' => $token]);
-    
-        $verificationCode = $user->generateVerificationCode();
-        Mail::to($user->email)->send(new VerificationCodeMail($user, $verificationCode));
+      $attrs = $request->validate([
+          'nom' => 'required|string',
+          'prenom' => 'required|string',
+          'email' => 'required|email|unique:users,email',
+          'phone' => 'required|digits:8|unique:users,phone',
+          'password' => 'required|min:6|confirmed',
+          'profile_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+      ]);
 
-        
-        // Return response
-        return response()->json([
-            'message' => 'User registered successfully. Please check your email for the verification code.',
-            'verification_code' => $verificationCode,
-            'user' => $user, 
-        ], 200);
-    }
+      Log::info('Validation passed');
+
+      if ($request->hasFile('profile_image')) {
+          $image = $request->file('profile_image');
+          $imageName = time() . '.' . $image->getClientOriginalExtension();
+          $image->move(public_path('images'), $imageName);
+          $imageUrl = 'images/' . $imageName;
+          Log::info('Image uploaded successfully: ' . $imageUrl);
+      }
+
+      $user = User::create([
+          'nom'=> $attrs['nom'],
+          'prenom' => $attrs['prenom'],
+          'email' => $attrs['email'],
+          'phone' => $attrs['phone'],
+          'password' => bcrypt($attrs['password']),
+          'remember_token' => Str::random(10),
+          'profile_image' => $imageUrl ?? null,
+      ]);
+
+      Log::info('User created successfully: ' . $user->id);
+
+      $token = $user->createToken('secret')->plainTextToken;
+      $user->update(['remember_token' => $token]);
+      $verificationCode = $user->generateVerificationCode();
+      Mail::to($user->email)->send(new VerificationCodeMail($user, $verificationCode));
+
+      // Remove email verification code generation and sending
+
+      return response()->json([
+          'message' => 'User registered successfully.',
+          'user' => $user,
+          'token' => $token
+      ], 200);
+  } catch (\Exception $e) {
+      Log::error('Registration failed: ' . $e->getMessage());
+      Log::error('Exception trace: ' . $e->getTraceAsString());
+      return response()->json([
+          'message' => 'Registration failed',
+          'error' => $e->getMessage(),
+      ], 500);
+  }
+}
 
     public function login(Request $request)
 {

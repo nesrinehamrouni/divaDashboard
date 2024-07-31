@@ -1,17 +1,18 @@
 
 import 'dart:io';
-import 'package:divamobile/pages/Filter_Stat/Filter_CA_ShowRoom.dart';
 
-import '../../pages/Filter_Stat/Filter_Stock.dart';
-import '../../pages/Filter_Stat/filterCA.dart';
+import 'package:divamobile/pages/Filter_Stat/Filter_CA_ShowRoom.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../Api.dart';
 import '../../My_globals.dart';
 import '../../constants.dart';
+import '../../pages/Filter_Stat/Filter_Stock.dart';
+import '../../pages/Filter_Stat/filterCA.dart';
 import '../Filter_Stat/Filter_FA.dart';
 import '../Filter_Stat/Filter_RetourART.dart';
 import '../Login/firstScreen.dart';
@@ -62,9 +63,6 @@ class _MenuState extends State<Menu_BI> {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-
-
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
 
@@ -81,7 +79,7 @@ class _MenuState extends State<Menu_BI> {
           ),
           titleSpacing: 20.0,
 
-          title:Text("Tableau de bord"),
+          title:Text("Tableau de bord", style: TextStyle(color: Colors.white,)),
           leading:  IconButton(
             icon:  Icon(Icons.arrow_back,color: Colors.white,),
             onPressed: () {

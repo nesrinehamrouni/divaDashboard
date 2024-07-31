@@ -1,5 +1,6 @@
 import 'package:divamobile/Notification/notif.dart';
 import 'package:divamobile/firebase_options.dart';
+import 'package:divamobile/pages/Menu/MenuBI.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -10,6 +11,14 @@ import 'package:hexcolor/hexcolor.dart';
 import './pages/Menu/Menu.dart';
 import './pages/splash_screen.dart';
 
+// @pragma('vm:entry-point')
+// Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+//   await Firebase.initializeApp();
+//   print("Handling a background message: ${message.messageId}");
+//   if (message.data['screen'] == 'tableau_de_bord') {
+//     MyApp.navigatorKey.currentState?.pushReplacementNamed('/tableau_de_bord');
+//   }
+// }
 
 Future main() async {
   
@@ -18,6 +27,7 @@ Future main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   // Initialize notifications
   final notificationSetup = NotificationSetUp();
@@ -36,6 +46,7 @@ class MyApp extends StatelessWidget {
 
   final Map<String, WidgetBuilder> routes = {
     '/Menu': (context) => Menu(),
+    '/tableau_de_bord': (context) => Menu_BI(),
   };
 
   static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -78,7 +89,5 @@ class MyApp extends StatelessWidget {
           );
     }
   );
-
-
   }
 }
