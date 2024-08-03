@@ -50,7 +50,7 @@ class AuthController extends Controller{
 
     public function login(Request $request)
 {
-  Log::info('Login request:', $request->all());
+    Log::info('Login request:', $request->all());
 
     $validator = Validator::make($request->all(), [
         'email' => 'required',
@@ -78,13 +78,21 @@ class AuthController extends Controller{
         );
     }
 
-    // Retrieve the authenticated user and generate an authentication token
+    // Retrieve the authenticated user and generate a new authentication token
     $user = User::where('email', strtoupper($request->email))->first();
-    $tokenResult = $user->remember_token;
+    
+    // Revoke all existing tokens for this user
+    $user->tokens()->delete();
+    
+    // Create a new token
+    $newToken = $user->createToken('auth_token')->plainTextToken;
+
+    // Update the remember_token
+    $user->update(['remember_token' => $newToken]);
 
     return response()->json([
         'status_code' => 200,
-        'token' => $tokenResult,
+        'token' => $newToken,
         'message' => 'Authenticated'
     ]);
 }
