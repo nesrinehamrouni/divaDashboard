@@ -25,4 +25,10 @@ class Conversation extends Model
     {
         return $this->belongsTo(User::class, 'user2_id');
     }
+
+    // Add this new relationship
+    public function lastMessage()
+    {
+        return $this->hasOne(Message::class)->latest('sent_at');
+    }
 }

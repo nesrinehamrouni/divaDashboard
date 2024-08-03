@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Message extends Model
 {
     use HasFactory;
+    
+    const CREATED_AT = 'sent_at';
+    const UPDATED_AT = null;
 
     protected $fillable = ['conversation_id', 'sender_id', 'content', 'message_type', 'is_read'];
 
