@@ -2,7 +2,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class BaseUrl {
 // static final String url = dotenv.env['API_BASE_URL'] ?? 'http://default_url';
-  static const url = 'http://192.168.137.100:8000/api';
+  static const url = 'http://192.168.1.19:8000/api';
 
 /*********************************************** user url ***************************/
   static final String Login = url + '/auth/login';
@@ -16,6 +16,9 @@ static final String SendVerificationCode = url + '/auth/send-verification-code';
   static final String VerifyCode = url + '/auth/verify-code';
   static final String ResendVerificationCode = url + '/auth/resend-verification-code';
 
+/**************************************chat **********************************************/
+static String getConversationMessages(int conversationId) => '$url/conversations/$conversationId/messages';
+static final String getAllUsers = url + '/users';
 
 /*********************************************** Chiffre Affaire url ***************************/
 

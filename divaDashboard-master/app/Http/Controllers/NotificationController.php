@@ -15,7 +15,14 @@ class NotificationController extends Controller
     static public function notify($title, $body, $device_key, $click_action ='FLUTTER_NOTIFICATION_CLICK')
     {
         $url = "https://fcm.googleapis.com/v1/projects/laranotify-99086/messages:send";
-        $credentialsFilePath = "public/json/laranotify-99086-1af7c591118e.json";
+        $credentialsFilePath = env('GOOGLE_APPLICATION_CREDENTIALS', public_path('json/laranotify-99086-1af7c591118e.json'));
+        if (!file_exists($credentialsFilePath)) {
+          Log::error("Credentials file not found: $credentialsFilePath");
+          return [
+              "message" => "Failed to send notification: Credentials file not found",
+              "success" => false,
+          ];
+      }
         $client = new GoogleClient();
         $client->setAuthConfig($credentialsFilePath);
         $client->addScope('https://www.googleapis.com/auth/firebase.messaging');

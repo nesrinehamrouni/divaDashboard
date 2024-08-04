@@ -119,6 +119,7 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
+    # - lib/pages/Chat/img
     - lib/.env
     - assets/images/Divalto_logo.png
     - assets/images/divaltoNouveauLogo.png

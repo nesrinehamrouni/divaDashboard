@@ -12,6 +12,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:divamobile/pages/Chat/HomePage.dart';
+
 
 import '../../Api.dart';
 import '../../My_globals.dart';
@@ -372,7 +374,7 @@ void removeNotification(String notificationId) {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => UserListPage()),
+                                MaterialPageRoute(builder: (context) => HomePage()),
                               );
                             },
 

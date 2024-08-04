@@ -56,5 +56,11 @@ class User extends Authenticatable
 
         return $verificationCode;
     }
+// ********************************************
+//     public function profile_image()
+// {
+//     return $this->hasOne('App/profile_image');
+// }
+// **********************************************************
 }
 

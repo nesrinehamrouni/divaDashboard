@@ -1,6 +1,9 @@
 import 'package:divamobile/Notification/notif.dart';
 import 'package:divamobile/firebase_options.dart';
 import 'package:divamobile/pages/Menu/MenuBI.dart';
+import 'package:divamobile/pages/Chat/HomePage.dart';
+import 'package:divamobile/pages/Chat/message_screen.dart';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -47,6 +50,8 @@ class MyApp extends StatelessWidget {
   final Map<String, WidgetBuilder> routes = {
     '/Menu': (context) => Menu(),
     '/tableau_de_bord': (context) => Menu_BI(),
+    '/chatHome': (context) => HomePage(), // Chat app home page
+    '/messageScreen': (context) => MessageScreen(),
   };
 
   static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

@@ -30,5 +30,7 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
-
+'firebase' => [
+        'credentials' => env('FIREBASE_CREDENTIALS', base_path('public/json/laranotify-99086-1af7c591118e.json')),
+    ],
 ];

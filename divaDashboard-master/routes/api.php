@@ -16,6 +16,11 @@ use App\Http\Controllers\DOS_ETBController;
 use App\Http\Controllers\DepotController;
 use App\Http\Controllers\VerificationmailController;
 use App\Http\Controllers\PhoneVerificationController;
+use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\UserController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -26,11 +31,26 @@ use App\Http\Controllers\PhoneVerificationController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+Route::prefix('chat')->group(function () {
+  // Conversations
+  Route::get('conversations', [ConversationController::class, 'index']);
+  Route::post('conversations', [ConversationController::class, 'store']);
+  Route::get('conversations/{conversation}', [ConversationController::class, 'show']);
 
+
+  // Messages
+  Route::get('conversations/{conversation}/messages', [MessageController::class, 'index']);
+  Route::post('conversations/{conversation}/messages', [MessageController::class, 'store']);
+
+  // Attachments
+  Route::post('messages/{message}/attachments', [AttachmentController::class, 'store']);
+  Route::get('attachments/{attachment}', [AttachmentController::class, 'show']);
+});
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::get('/users', [UserController::class, 'getAllUsers'])->middleware('auth:api');
 
 
 Route::post('auth/register',[AuthController::class,'register']);

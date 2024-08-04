@@ -120,7 +120,7 @@ public function logout(Request $request)
         $user = auth()->user();
         
         if (!$user) {
-            \Log::warning('Logout attempted with no authenticated user');
+            Log::warning('Logout attempted with no authenticated user');
             return response()->json([
                 'status' => 'warning',
                 'message' => 'No authenticated user found'
@@ -138,7 +138,7 @@ public function logout(Request $request)
             'message' => 'Logged out successfully'
         ], 200);
     } catch (\Exception $e) {
-        \Log::error('Logout error: ' . $e->getMessage());
+        Log::error('Logout error: ' . $e->getMessage());
         
         return response()->json([
             'status' => 'error',
@@ -160,8 +160,8 @@ public function logout(Request $request)
         
         return response()->json($users);
     } catch (\Exception $e) {
-        \Log::error('Error in get_user: ' . $e->getMessage());
-        \Log::error('Stack trace: ' . $e->getTraceAsString());
+        Log::error('Error in get_user: ' . $e->getMessage());
+        Log::error('Stack trace: ' . $e->getTraceAsString());
         return response()->json([
             'error' => 'An error occurred while fetching users',
             'message' => $e->getMessage(),
@@ -183,7 +183,7 @@ public function getCurrentUserId(Request $request)
             return response()->json(['message' => 'User not authenticated'], 401);
         }
     } catch (\Exception $e) {
-        \Log::error('Error in getCurrentUserId: ' . $e->getMessage());
+        Log::error('Error in getCurrentUserId: ' . $e->getMessage());
         return response()->json(['error' => 'An error occurred while fetching user ID'], 500);
     }
 }
