@@ -9,7 +9,7 @@ import 'package:http_parser/http_parser.dart';
 
 import '../Api.dart';
 
-Future<ApiResponse> register(String nom, String prenom, String email, String phone, String password, File image) async {
+Future<ApiResponse> register(String nom, String prenom, String email, String phone, String password, File image, String role) async {
   ApiResponse apiResponse = ApiResponse();
   try {
     var request = http.MultipartRequest('POST', Uri.parse(BaseUrl.Register));
@@ -19,6 +19,8 @@ Future<ApiResponse> register(String nom, String prenom, String email, String pho
     request.fields['email'] = email;
     request.fields['password'] = password;
     request.fields['password_confirmation'] = password;
+    request.fields['role'] = role ;
+  
 
     var pic = await http.MultipartFile.fromPath('profile_image', image.path, contentType: MediaType('image', 'jpeg'));
     request.files.add(pic);

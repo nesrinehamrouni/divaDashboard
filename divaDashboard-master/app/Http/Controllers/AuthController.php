@@ -27,7 +27,8 @@ public function register(Request $request){
           'phone' => 'required|digits:8|unique:users,phone',
           'password' => 'required|min:6|confirmed',
           'profile_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-      ]);
+         'role' => 'required|string|in:Admin,Responsable'
+        ]);
 
       Log::info('Validation passed');
 
@@ -47,10 +48,12 @@ public function register(Request $request){
           'password' => bcrypt($attrs['password']),
           'remember_token' => Str::random(10),
           'profile_image' => $imageUrl ?? null,
+          'role' => $attrs['role'],
       ]);
 
       Log::info('User created successfully: ' . $user->id);
-
+      Log::info('User role: ' . $user->role);
+     
       $token = $user->createToken('secret')->plainTextToken;
       $user->update(['remember_token' => $token]);
       $verificationCode = $user->generateVerificationCode();

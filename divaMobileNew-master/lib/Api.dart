@@ -2,7 +2,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class BaseUrl {
 // static final String url = dotenv.env['API_BASE_URL'] ?? 'http://default_url';
-  static const url = 'http://192.168.137.100:8000/api';
+  static const url = 'http://192.168.124.43:8000/api';
 
 /*********************************************** user url ***************************/
   static final String Login = url + '/auth/login';

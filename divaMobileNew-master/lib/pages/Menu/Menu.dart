@@ -4,10 +4,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:blurry_modal_progress_hud/blurry_modal_progress_hud.dart';
+import 'package:divamobile/Models/user.dart';
 import 'package:divamobile/Utils.dart';
 import 'package:divamobile/pages/Menu/Chat/UserListPage.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
@@ -36,12 +39,13 @@ class _MenuState extends State<Menu> {
   List<Map<String, dynamic>> notifications = [];
   bool isLoading = false;
   Timer? _timer;
+  String userRole = '';
 
   @override
-   initState()   {
+   void initState()   {
 
     super.initState();
-
+    getUserRole;
     getDOS_ETB();
     // Initial fetch
     fetchNotifications();
@@ -51,7 +55,15 @@ class _MenuState extends State<Menu> {
     });
     
   }
-
+    Future<void> getUserRole() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userRole = prefs.getString('userRole') ?? '';
+      if (userRole == 'admin') {
+        events.add("Tableau de bord");
+      }
+    });
+  }
   Future<void> getDOS_ETB() async {
     final prefs = await SharedPreferences.getInstance();
     if( prefs.getString('DOS') != null){
@@ -195,8 +207,7 @@ void removeNotification(String notificationId) {
     "Consultation Pièces Fournisseur",
     "Consultation des réglements",
     "Consultation des journaux",
-    "Tableau de bord",
-
+  
   ];
 
 
@@ -331,7 +342,7 @@ void removeNotification(String notificationId) {
                           ),
                         ),
                         onTap: () {
-                          if (title == "Tableau de bord") {
+                          if (title == "Tableau de bord" && userRole == 'admin') {
                             setState(() {
                               Global.NB_stock =0;
                               Global.set_FamART_Stat("");
@@ -544,6 +555,11 @@ Future<void> _handleLogoutSuccess() async {
         );
       },
     );
+  }
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(StringProperty('userRole', userRole));
   }
 
   // bool loadingNotif = false;

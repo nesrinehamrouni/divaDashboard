@@ -36,6 +36,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
       passwordController = TextEditingController(),
       passwordConfirmController = TextEditingController(),
       verificationCodeController = TextEditingController();
+      String? selectedRole;
 
   @override
   void dispose() {
@@ -70,6 +71,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
     setState(() {
       loading = true;
     });
+     print(
+      "selectedRole"
+    );
 
     String originalPhone = phoneController.text;
 
@@ -80,6 +84,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
       originalPhone,
       passwordController.text,
       _image!,
+      selectedRole ?? '',
     );
 
     setState(() {
@@ -203,6 +208,26 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                   ? 'Confirm password does not match'
                                   : null,
                             ),
+                            SizedBox(height: 20.0),
+                              Container(
+                                child: DropdownButtonFormField<String>(
+                                  decoration: ThemeHelper().textInputDecoration('Rôle', 'Sélectionnez votre rôle'),
+                                  value: selectedRole,
+                                  items: <String>['Responsable', 'Admin'].map((String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value),
+                                    );
+                                  }).toList(),
+                                  onChanged: (String? newValue) {
+                                    setState(() {
+                                      selectedRole = newValue;
+                                    });
+                                  },
+                                  validator: (value) => value == null ? 'Veuillez sélectionner un rôle' : null,
+                                ),
+                                decoration: ThemeHelper().inputBoxDecorationShaddow(),
+                              ),
                             SizedBox(height: 15.0),
                             _buildCheckboxFormField(),
                             SizedBox(height: 20.0),
