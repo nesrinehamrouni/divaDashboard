@@ -104,6 +104,7 @@
 // }
 
 
+import 'package:divamobile/pages/Chat/ConverstationScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -305,7 +306,12 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ConversationScreen()),
+          );
+        },
         backgroundColor: Color(0xFF113953),
         child: Icon(Icons.add, color: Colors.white),
       ),

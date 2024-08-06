@@ -77,7 +77,8 @@ dependencies:
   google_fonts: any
   image_picker_platform_interface: ^2.10.0
   firebase_analytics: ^11.2.0
-
+  file_picker: ^5.3.2
+  emoji_picker_flutter: ^1.5.4
   
 dependency_overrides:
   intl: any
