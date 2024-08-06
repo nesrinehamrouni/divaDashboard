@@ -9,66 +9,57 @@ use App\Models\User;
 
 class ConversationController extends Controller
 {
-    // public function index()
-    // {
-    //     $user = Auth::user();
-    //     $conversations = Conversation::where('user1_id', $user->id)
-    //         ->orWhere('user2_id', $user->id)
-    //         ->with(['user1', 'user2', 'lastMessage'])
-    //         ->latest('updated_at')
-    //         ->get();
-
-    //     return response()->json($conversations);
-    // }
     public function index()
-    {
-        $user = Auth::user();
+{
+    $user = Auth::user();
+
+    // Check if user is authenticated
+    if (!$user) {
+        \Log::error('User not authenticated in ConversationController@index');
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+
+    try {
         $conversations = Conversation::where('user1_id', $user->id)
             ->orWhere('user2_id', $user->id)
             ->with(['user1', 'user2', 'lastMessage'])
             ->latest('updated_at')
-            ->get()
-            ->map(function ($conversation) use ($user) {
-                $otherUser = $conversation->user1_id == $user->id ? $conversation->user2 : $conversation->user1;
-                return [
-                    'id' => $conversation->id,
-                    'user' => [
-                        'id' => $otherUser->id,
-                        'prenom' => $otherUser->prenom,
-                        'nom' => $otherUser->nom,
-                        'profile_image' => $otherUser->photo ?? 'default_photo_url', // Provide a default if no photo
-                    ],
-                    'last_message' => [
-                        'content' => $conversation->lastMessage 
-                            ? (strlen($conversation->lastMessage->content) > 22 
-                                ? substr($conversation->lastMessage->content, 0, 22) . '...' 
-                                : $conversation->lastMessage->content)
-                            : 'No messages yet',
-                        'time' => $conversation->lastMessage ? $conversation->lastMessage->sent_at : null,
-                    ],
-                    'unread_count' => $conversation->messages()
-                        ->where('read', false)
-                        ->where('user_id', '!=', $user->id)
-                        ->count(),
-                ];
-            });
+            ->get();
 
         return response()->json($conversations);
+    } catch (\Exception $e) {
+        return response()->json(['message' => $e->getMessage()], 500);
     }
-  
-    public function show(Conversation $conversation)
-    {
-        $user = Auth::user();
-        if (!$this->isUserInConversation($user, $conversation)) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+}
 
+
+public function show(Conversation $conversation)
+{
+    $user = Auth::user();
+
+    if (!$user) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+
+    if (!$this->isUserInConversation($user, $conversation)) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+
+    try {
         $conversation->load(['user1', 'user2', 'messages' => function ($query) {
             $query->latest()->limit(20);
         }]);
 
         return response()->json($conversation);
+    } catch (\Exception $e) {
+        return response()->json(['message' => $e->getMessage()], 500);
     }
+}
+public function __construct()
+    {
+        $this->middleware('auth:sanctum');
+    }
+
 
     public function store(Request $request)
     {

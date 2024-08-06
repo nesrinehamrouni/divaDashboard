@@ -56,8 +56,7 @@ class MessageController extends Controller
         // Load the sender relationship
         $message->load('sender');
 
-        // TODO: Implement real-time notification (e.g., using Pusher or WebSockets)
-
+        broadcast(new MessageSent($message))->toOthers();
         return response()->json($message, 201);
     }
 
