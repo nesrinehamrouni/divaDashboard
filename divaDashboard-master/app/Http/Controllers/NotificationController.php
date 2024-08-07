@@ -113,22 +113,22 @@ class NotificationController extends Controller
         }
     }
 
-    public function testqueues(Request $request)
-    {
-        $users = User::whereNotNull('device_key')->whereNotNull('delay')->get();
-        Log::info('Sending notifications to user');
-        foreach ($users as $user) {
-            dispatch(
-                new NotificationScheduleJob(
-                    $user->nom,
-                    $user->email,
-                    $user->device_key,
+    // public function testqueues(Request $request)
+    // {
+    //     $users = User::whereNotNull('device_key')->whereNotNull('delay')->get();
+    //     Log::info('Sending notifications to user');
+    //     foreach ($users as $user) {
+    //         dispatch(
+    //             new NotificationScheduleJob(
+    //                 $user->nom,
+    //                 $user->email,
+    //                 $user->device_key,
 
-                )
-                )->delay(now()->addSeconds($user->delay));
-            // dispatch(new FetchNotificationsJob($user->id));
-        }
-    }
+    //             )
+    //             );
+    //         // dispatch(new FetchNotificationsJob($user->id));
+    //     }
+    // }
 
     public function getNotifications(): JsonResponse
 {

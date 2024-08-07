@@ -14,10 +14,10 @@ class Kernel extends ConsoleKernel
      * @return void
      */
     protected function schedule(Schedule $schedule)
-    {
-        // $schedule->command('inspire')->hourly();
-    }
-
+{
+    $schedule->command('notifications:dispatch-daily')->dailyAt("11:15")
+    ->withoutOverlapping()->appendOutputTo(storage_path('logs/notification-dispatch.log')); ;
+}
     /**
      * Register the commands for the application.
      *
