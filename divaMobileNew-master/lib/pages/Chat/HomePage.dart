@@ -1,116 +1,14 @@
-// import 'RecentChats.dart';
-// import 'myprofile.dart';
-// import 'package:flutter/material.dart';
-// class HomePage extends StatelessWidget {
-//   const HomePage({super.key});
+import 'dart:convert';
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       drawer: Drawer(),
-//       appBar: AppBar(
-//         actions: [
-//           Padding(
-//             padding: EdgeInsets.symmetric(horizontal: 15),
-//             child: Icon(Icons.notifications),
-//           ),
-//         ],
-//       ),
-//       body: Column(
-//         children: [
-//           Container(
-//             height: 10,
-//             decoration: BoxDecoration(
-//               boxShadow: [
-//                 BoxShadow(
-//                   color: Colors.black12, // Lighter shadow color for subtle effect
-//                   blurRadius: 5.0,
-//                   spreadRadius: 2.0,
-//                   offset: Offset(0, 3), // Slight downward shadow
-//                 ),
-//               ],
-//               color: Color(0xFFF5F5F3),
-//             ),
-//           ),
-//           Expanded(
-//             child: ListView(
-//               children: [
-//                 Padding(
-//                   padding: EdgeInsets.symmetric(vertical: 25, horizontal: 20),
-//                   child: Text(
-//                     "Messages",
-//                     style: TextStyle(
-//                       color: Color(0xFF11395F), // Corrected color code
-//                       fontSize: 28,
-//                       fontWeight: FontWeight.bold,
-//                     ),
-//                   ),
-//                 ),
-//                 Padding(
-//                   padding: EdgeInsets.symmetric(horizontal: 15),
-//                   child: Container(
-//                     padding: EdgeInsets.symmetric(horizontal: 15),
-//                     decoration: BoxDecoration(
-//                       color: Colors.white,
-//                       borderRadius: BorderRadius.circular(20),
-//                       boxShadow: [
-//                         BoxShadow(
-//                           color: Colors.grey.withOpacity(0.5),
-//                           blurRadius: 10,
-//                           spreadRadius: 2,
-//                           offset: Offset(0, 3),
-//                         ),
-//                       ],
-//                     ),
-//                     child: Row(
-//                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                       children: [
-//                         Container(
-//                           width: 300,
-//                           child: Padding(
-//                             padding: EdgeInsets.symmetric(horizontal: 15),
-//                             child: TextFormField(
-//                               decoration: InputDecoration(
-//                                 hintText: "Search",
-//                                 border: InputBorder.none,
-//                               ),
-//                             ),
-//                           ),
-//                         ),
-//                         Icon(
-//                           Icons.search,
-//                           color: Color(0xFF113953),
-//                         ),
-//                       ],
-//                     ),
-//                   ),
-//                 ),
-//                 MyProfile(),
-//                 RecentChats(),
-//               ],
-//             ),
-//           ),
-//         ],
-//       ),
-//       floatingActionButton: FloatingActionButton(
-//         onPressed: () {},
-//         backgroundColor: Color(0xFF113953),
-//         child: Icon(Icons.add,
-//             color: Colors.white
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-
-import 'package:divamobile/pages/Chat/ConverstationScreen.dart';
+import 'package:divamobile/Api.dart';
+import 'package:divamobile/Models/user.dart';
+import 'package:divamobile/Utils.dart';
+import 'package:divamobile/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
+
 import 'RecentChats.dart';
 import 'myprofile.dart';
-import '../../Api.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -121,6 +19,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> allUsers = [];
+  List<dynamic> users = [];
   List<Map<String, dynamic>> displayedUsers = [];
   bool isLoading = true;
   bool isSearching = false;
@@ -132,23 +31,85 @@ class _HomePageState extends State<HomePage> {
     fetchUsers();
   }
 
-  Future<void> fetchUsers() async {
+  Future<int?> fetchCurrentUserId() async {
     try {
+      String? token = await Utils.getToken();
+
+      if (token == null) {
+        throw Exception('Token is null');
+      }
+
       final response = await http.get(
-        Uri.parse(BaseUrl.getAllUsers),
+        Uri.parse(BaseUrl.GetCurrentUserId),
         headers: {
-          'Authorization': 'Bearer YOUR_AUTH_TOKEN_HERE', // Replace with actual auth token
           'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
         },
       );
 
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
       if (response.statusCode == 200) {
-        List<dynamic> data = json.decode(response.body);
-        setState(() {
-          allUsers = List<Map<String, dynamic>>.from(data);
-          displayedUsers = allUsers;
-          isLoading = false;
-        });
+        var jsonResponse = json.decode(response.body);
+        if (jsonResponse['user_id'] != null) {
+          return jsonResponse['user_id'];
+        } else {
+          throw Exception('Unexpected response format');
+        }
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized: ${response.body}');
+      } else {
+        throw Exception('Failed to load current user id');
+      }
+    } catch (e) {
+      print('Error fetching current user id: $e');
+      throw Exception('Failed to fetch current user id');
+    }
+  }
+
+  Future<void> fetchUsers() async {
+    try {
+      // Fetch current user ID
+      int? currentUserId = await fetchCurrentUserId();
+
+      final response = await http.get(Uri.parse(BaseUrl.GetUsers), headers: {
+        'Accept': 'application/json',
+      });
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        List<User> fetchedUsers = [];
+
+        // Parse the JSON response safely
+        var jsonResponse = json.decode(response.body);
+        if (jsonResponse is List) {
+          fetchedUsers =
+              jsonResponse.map((data) => User.fromJson(data)).toList();
+
+          // Filter out the current user from fetchedUsers
+          fetchedUsers.removeWhere((user) => user.id == currentUserId);
+
+          fetchedUsers.sort((a, b) => a.nom!.compareTo(b.nom!));
+
+          setState(() {
+            users = fetchedUsers;
+            allUsers = fetchedUsers.map((user) {
+              return {
+                'id': user.id,
+                'nom': user.nom,
+                'prenom': user.prenom,
+                'profile_image': user.image, // Assuming 'image' contains profile image URL
+              };
+            }).toList();
+            displayedUsers = allUsers;
+            isLoading = false;
+          });
+        } else {
+          throw Exception('Unexpected response format');
+        }
       } else {
         throw Exception('Failed to load users');
       }
@@ -180,14 +141,23 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       drawer: Drawer(),
       appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.topLeft,
+              colors: <Color>[accentColor, primaryColor],
+            ),
+          ),
+        ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back, color:Colors.white), // Or Icons.menu if using with Drawer
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 15),
-            child: Icon(Icons.notifications),
+            child: Icon(Icons.notifications, color: Colors.white),
           ),
         ],
       ),
@@ -196,7 +166,6 @@ class _HomePageState extends State<HomePage> {
           : Column(
               children: [
                 Container(
-                  height: 10,
                   decoration: BoxDecoration(
                     boxShadow: [
                       BoxShadow(
@@ -265,21 +234,16 @@ class _HomePageState extends State<HomePage> {
                           itemBuilder: (context, index) {
                             final user = displayedUsers[index];
                             return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 15.0),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 8.0, horizontal: 15.0),
                               child: Row(
                                 children: [
                                   CircleAvatar(
                                     radius: 30, // Larger image
                                     backgroundImage: NetworkImage(
-                                      user['profile_image'] ?? 'https://example.com/default_profile.png',
-                                      // Replace with your actual default image URL
+                                      user['profile_image'] ??
+                                          'https://example.com/default_profile.png', // Replace with your actual default image URL
                                     ),
-                                    onBackgroundImageError: (_, __) {
-                                      // Fallback to default image on error
-                                      setState(() {
-                                        user['profile_image'] = 'https://example.com/default_profile.png';
-                                      });
-                                    },
                                   ),
                                   SizedBox(width: 15),
                                   Expanded(
@@ -305,16 +269,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ConversationScreen()),
-          );
-        },
-        backgroundColor: Color(0xFF113953),
-        child: Icon(Icons.add, color: Colors.white),
-      ),
     );
   }
 

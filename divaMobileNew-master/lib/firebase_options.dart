@@ -50,19 +50,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAYwk1dNKYbRJ_LAo8-ugVrtMZSlkvHwbc',
-    appId: '1:855277218381:android:0f7cfed143ce58ddc38a04',
-    messagingSenderId: '855277218381',
-    projectId: 'laranotify-99086',
-    storageBucket: 'laranotify-99086.appspot.com',
+    apiKey: 'AIzaSyCJYbwNxmB4pzRWnMhRx_OH9-lTe95GgdQ',
+    appId: '1:23481155335:android:984e000256a24c95d6cfa2',
+    messagingSenderId: '23481155335',
+    projectId: 'laravelnotif-ec82d',
+    storageBucket: 'laravelnotif-ec82d.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAYwk1dNKYbRJ_LAo8-ugVrtMZSlkvHwbc',
-    appId: '1:855277218381:ios:0f7cfed143ce58ddc38a04',
-    messagingSenderId: '855277218381',
-    projectId: 'laranotify-99086',
-    storageBucket: 'laranotify-99086.appspot.com',
+    apiKey: 'AIzaSyB_oEPe4a9VOSAK_2cEW8wXpbmsTpdBrno',
+    appId: '1:23481155335:ios:dfb07a89d7a59c60d6cfa2',
+    messagingSenderId: '23481155335',
+    projectId: 'laravelnotif-ec82d',
+    storageBucket: 'laravelnotif-ec82d.appspot.com',
     iosBundleId: 'com.example.divamobile',
   );
 }

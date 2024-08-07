@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
+
 import 'ComponentsBody.dart';
 
 class ConversationScreen extends StatelessWidget {
+  final int userId;
+  final String userName;
+  final String? userProfileImage;
+
+  ConversationScreen({
+    required this.userId,
+    required this.userName,
+    this.userProfileImage,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,18 +39,21 @@ class ConversationScreen extends StatelessWidget {
             title: Row(
               children: [
                 CircleAvatar(
-                  backgroundImage: AssetImage("assets/images/Divalto_logo.png"),
+                  backgroundImage: userProfileImage != null
+                      ? NetworkImage(userProfileImage!)
+                      : AssetImage("assets/images/Divalto_logo.png")
+                          as ImageProvider,
                 ),
                 SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Monjia Hattab",
+                      userName,
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
                     ),
                     Text(
-                      "Responsable",
+                      "Online", // You can replace this with the user's status
                       style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
@@ -49,7 +63,7 @@ class ConversationScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: ComponentsBody(),
+      body: ComponentsBody(userId: userId), // Pass the userId to ComponentsBody
     );
   }
 }

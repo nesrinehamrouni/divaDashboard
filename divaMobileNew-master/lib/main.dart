@@ -1,9 +1,8 @@
 import 'package:divamobile/Notification/notif.dart';
 import 'package:divamobile/firebase_options.dart';
-import 'package:divamobile/pages/Menu/MenuBI.dart';
 import 'package:divamobile/pages/Chat/HomePage.dart';
 import 'package:divamobile/pages/Chat/message_screen.dart';
-
+import 'package:divamobile/pages/Menu/MenuBI.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -31,6 +30,11 @@ Future main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    debugPrint(details.toString());
+  };
 
   // Initialize notifications
   final notificationSetup = NotificationSetUp();

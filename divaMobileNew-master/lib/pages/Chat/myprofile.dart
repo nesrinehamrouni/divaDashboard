@@ -1,6 +1,11 @@
+import 'dart:convert';
+
+import 'package:divamobile/Models/user.dart';
+import 'package:divamobile/Utils.dart';
+import 'package:divamobile/pages/Chat/ConverstationScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
+
 import '../../Api.dart';
 
 class MyProfile extends StatefulWidget {
@@ -20,31 +25,78 @@ class _MyProfileState extends State<MyProfile> {
     fetchUsers();
   }
 
-  Future<void> fetchUsers() async {
+  Future<int?> fetchCurrentUserId() async {
     try {
-      final response = await http.get(
-        Uri.parse(BaseUrl.getAllUsers),
-        headers: {
-          'Authorization': 'dmmIJZP-SOyC--pZjljR__:APA91bF_k_wBBZtVMbCl_YJJzwsohyQ1nj_SVzPYusGQk4V7XOG3u70ZZUJ8h2oyddnET9Na5hchsEtqOM2Z5xpFmsRXCMEm0IleMUgE4IoHBasCLG2JFrMed2dEqS2jXOKfFLGM2TH1', // Replace with actual token
-          'Accept': 'application/json',
-        },
-      );
+    String? token = await Utils.getToken();
+
+    if (token == null) {
+      throw Exception('Token is null');
+    }
+
+    final response = await http.get(
+      Uri.parse(BaseUrl.GetCurrentUserId),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
 
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final List<dynamic> decodedData = json.decode(response.body);
-        print('Decoded data: $decodedData');
-        setState(() {
-          users = decodedData;
-          isLoading = false;
-        });
+        var jsonResponse = json.decode(response.body);
+      if (jsonResponse['user_id'] != null) {
+        return jsonResponse['user_id'];
+        } else {
+          throw Exception('Unexpected response format');
+        }
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized: ${response.body}');
       } else {
-        print('Failed to load users: ${response.statusCode}');
-        setState(() {
-          isLoading = false;
-        });
+        throw Exception('Failed to load current user id');
+      }
+    } catch (e) {
+      print('Error fetching current user id: $e');
+      throw Exception('Failed to fetch current user id');
+    }
+  }
+
+  Future<void> fetchUsers() async {
+    try {
+      // Fetch current user ID
+      int? currentUserId = await fetchCurrentUserId();
+
+      final response = await http.get(Uri.parse(BaseUrl.GetUsers), headers: {
+        'Accept': 'application/json',
+      });
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        List<User> fetchedUsers = [];
+
+        // Parse the JSON response safely
+        var jsonResponse = json.decode(response.body);
+        if (jsonResponse is List) {
+          fetchedUsers =
+              jsonResponse.map((data) => User.fromJson(data)).toList();
+
+          // Filter out the current user from fetchedUsers
+          fetchedUsers.removeWhere((user) => user.id == currentUserId);
+
+          fetchedUsers.sort((a, b) => a.nom!.compareTo(b.nom!));
+
+          setState(() {
+            users = fetchedUsers;
+            isLoading = false;
+          });
+        } else {
+          throw Exception('Unexpected response format');
+        }
+      } else {
+        throw Exception('Failed to load users');
       }
     } catch (e) {
       print('Error fetching users: $e');
@@ -69,10 +121,23 @@ class _MyProfileState extends State<MyProfile> {
     );
   }
 
-  Widget buildUserProfile(dynamic user) {
-    print('User data: $user'); // This will print all available data for each user
+ Widget buildUserProfile(User user) {
+  print('User data: $user'); // This will print all available data for each user
 
-    return Padding(
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ConversationScreen(
+            userId: user.id!,
+            userName: user.nom ?? user.prenom ?? 'User',
+            userProfileImage: user.image,
+          ),
+        ),
+      );
+    },
+    child: Padding(
       padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       child: Column(
         children: [
@@ -93,23 +158,26 @@ class _MyProfileState extends State<MyProfile> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(35),
-              child: Icon(Icons.person, size: 65, color: Colors.grey),
+              child: user.image != null
+                  ? Image.network(user.image!)
+                  : Icon(Icons.person, size: 65, color: Colors.grey),
             ),
           ),
           SizedBox(height: 5),
           Text(
-            user['nom'] ?? 'User',
+            user.nom ?? user.prenom ?? 'User',
             style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
             overflow: TextOverflow.ellipsis,
           ),
           SizedBox(height: 2),
           Text(
-            user['prenom'] ?? user['email'] ?? 'No details', // Fallback to email if prenom is null
+            user.prenom ?? user.nom ?? user.email ?? 'No details',
             style: TextStyle(fontSize: 10),
             overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
