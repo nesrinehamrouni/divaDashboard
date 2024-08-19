@@ -5,6 +5,8 @@ import 'dart:io';
 
 import 'package:blurry_modal_progress_hud/blurry_modal_progress_hud.dart';
 import 'package:divamobile/Utils.dart';
+import 'package:divamobile/pages/Login/Choix_DOS_ETB.dart';
+import 'package:divamobile/pages/Login/firstScreen.dart';
 import 'package:divamobile/pages/Menu/Chat/UserListPage.dart';
 import 'package:divamobile/pages/Menu/ReglementPage.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
@@ -19,9 +21,6 @@ import '../../My_globals.dart';
 import '../../PièceFOU/PieceFou.dart';
 import '../../constants.dart';
 import '../../pieceCLI/PieceCLI.dart';
-import '../Login/Choix_DOS_ETB.dart';
-import '../Login/firstScreen.dart';
-import 'MenuBI.dart';
 
 
 
@@ -196,7 +195,6 @@ void removeNotification(String notificationId) {
     "Consultation Pièces Fournisseur",
     "Consultation des réglements",
     "Consultation des journaux",
-    "Tableau de bord",
   
 
   ];
@@ -333,17 +331,7 @@ void removeNotification(String notificationId) {
                           ),
                         ),
                         onTap: () {
-                          if (title == "Tableau de bord") {
-                            setState(() {
-                              Global.NB_stock =0;
-                              Global.set_FamART_Stat("");
-                            });
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => Menu_BI()));
-                          }
-
+                          
                           if (title == "Consultation des réglements") {
 
                              Navigator.push(
@@ -394,10 +382,7 @@ void removeNotification(String notificationId) {
 
   Widget getCardByTitle(String title) {
     String img = "";
-
-       if (title == "Tableau de bord")
-      img = "assets/New_menu_img/Tableau_de_bord.png";
-   else if (title == "Consultation des journaux")
+if (title == "Consultation des journaux")
       img = "assets/New_menu_img/billets-dargent.png";
        else if (title == "Consultation Pièces Fournisseur")
          img = "assets/New_menu_img/piece_fou1.png";

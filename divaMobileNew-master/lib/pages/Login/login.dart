@@ -1,11 +1,9 @@
 import 'dart:convert';
-
 import 'package:divamobile/Utils.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../../../common/theme_helper.dart';
 import '../../../../pages/widgets/header_widget.dart';
 import '../../Api.dart';
@@ -15,11 +13,12 @@ class LoginBtn extends StatefulWidget {
   final bool isSmall;
   final Function(bool) onLoginStateChanged;
 
- const LoginBtn({
+  const LoginBtn({
     Key? key,
     required this.isSmall,
     required this.onLoginStateChanged,
   }) : super(key: key);
+
   @override
   _LoginBtnState createState() => _LoginBtnState();
 }
@@ -31,63 +30,74 @@ class _LoginBtnState extends State<LoginBtn> {
   TextEditingController emailController = TextEditingController();
   bool _passwordVisible = true;
 
-Future<void> _login() async {
-  final String email = emailController.text.trim();
-  final String password = passwordController.text.trim();
+  Future<void> _login() async {
+    final String email = emailController.text.trim();
+    final String password = passwordController.text.trim();
 
-  try {
-    final response = await http.post(
-      Uri.parse(BaseUrl.Login),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'email': email,
-        'password': password,
-      }),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse(BaseUrl.Login),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'email': email,
+          'password': password,
+        }),
+      );
 
-    final responseBody = jsonDecode(response.body);
+      final responseBody = jsonDecode(response.body);
 
-    if (response.statusCode == 200) {
-      if (responseBody['status_code'] == 200) {
-        print('Login successful');
-        if (responseBody['token'] != null) {
-          print('Token received: ${responseBody['token']}');
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          await prefs.setString('auth_token', responseBody['token']);
-          await Utils.setToken(responseBody['token']);
-          print('Token saved');
+      if (response.statusCode == 200) {
+        if (responseBody['status_code'] == 200) {
+          print('Login successful');
+          
+          // Initialize SharedPreferences
+          final prefs = await SharedPreferences.getInstance();
+          
+          if (responseBody['token'] != null) {
+            print('Token received: ${responseBody['token']}');
+            await prefs.setString('auth_token', responseBody['token']);
+            await Utils.setToken(responseBody['token']);
+            print('Token saved');
+          } else {
+            print('No token received in login response');
+          }
+
+          String role = responseBody['role'] ?? 'User';
+          print('User role: $role');
+          await prefs.setString('user_role', role);
+
+          _showSnackBar('Login successful', Colors.green);
+
+          if (role == 'Admin') {
+            Navigator.pushReplacementNamed(context, '/AdminDashboard');
+          } else if (role == 'Responsable') {
+            Navigator.pushReplacementNamed(context, '/ResponsableDashboard');
+          } else {
+            Navigator.pushReplacementNamed(context, '/Menu');
+          }
+        } else if (responseBody['status_code'] == 401) {
+          print('Login failed: Incorrect email or password');
+          _showSnackBar("Adresse e-mail ou mot de passe incorrect.", Colors.red);
+        } else if (responseBody['status_code'] == 404) {
+          print('Login failed: User does not exist');
+          _showSnackBar("L'utilisateur n'existe pas. Vérifiez votre saisie.", Colors.red);
         } else {
-          print('No token received in login response');
+          print('Login failed with message: ${responseBody['message']}');
+          _showSnackBar(responseBody['message'], Colors.red);
         }
-
-        _showSnackBar('Login successful', Colors.green);
-
-        Navigator.pushReplacementNamed(context, '/Menu');
-      } else if (responseBody['status_code'] == 401) {
-        print('Login failed: Incorrect email or password');
-      _showSnackBar("Adresse e-mail ou mot de passe incorrect.", Colors.red);
-      } else if (responseBody['status_code'] == 404) {
-        print('Login failed: User does not exist');
-        _showSnackBar("L'utilisateur n'existe pas. Vérifiez votre saisie.", Colors.red);
-
       } else {
-        print('Login failed with message: ${responseBody['message']}');
-        _showSnackBar(responseBody['message'], Colors.red);
-
-      }
-    } else {
-      print('Login failed with status code: ${response.statusCode}');
+        print('Login failed with status code: ${response.statusCode}');
         _showSnackBar('Login failed with status code: ${response.statusCode}', Colors.red);
-
+      }
+    } catch (e) {
+      print('Login error: $e');
+      _showSnackBar('Server error: $e', Colors.red);
     }
-  } catch (e) {
-    print('Login error: $e');
-    _showSnackBar('Server error: $e', Colors.red);
-  } 
   }
- void _showSnackBar(String message, Color color) {
+
+  void _showSnackBar(String message, Color color) {
     final snackBar = SnackBar(
       content: Text(message),
       backgroundColor: color,
@@ -96,7 +106,7 @@ Future<void> _login() async {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
- void _handleLogin() async {
+  void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       widget.onLoginStateChanged(true);
       await _login();
@@ -104,16 +114,14 @@ Future<void> _login() async {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-   return Column(
+    return Column(
       children: [
         if (widget.isSmall)
           Container(
             height: _headerHeight,
-        child: HeaderWidget(_headerHeight, true, Icons.login_rounded),
+            child: HeaderWidget(_headerHeight, true, Icons.login_rounded),
           ),
         SafeArea(
           child: Center(
@@ -154,11 +162,11 @@ Future<void> _login() async {
                                 borderRadius: BorderRadius.circular(100.0),
                                 borderSide: BorderSide(color: Colors.grey),
                               ),
-                               enabledBorder: OutlineInputBorder(
+                              enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(100.0),
                                 borderSide: BorderSide(color: Colors.grey.shade400),
                               ),
-                                 errorBorder: OutlineInputBorder(
+                              errorBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(100.0),
                                 borderSide: BorderSide(color: Colors.red, width: 2.0),
                               ),
@@ -177,7 +185,7 @@ Future<void> _login() async {
                                   });
                                 },
                               ),
-                                    ),
+                            ),
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
@@ -195,7 +203,7 @@ Future<void> _login() async {
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white),
                               ),
-                                ),
+                            ),
                             onPressed: _handleLogin,
                           ),
                         ),
@@ -234,8 +242,8 @@ Future<void> _login() async {
               ),
             ),
           ),
-            ),
+        ),
       ],
     );
-  } 
-  }                 
+  }
+}

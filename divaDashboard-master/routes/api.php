@@ -16,6 +16,8 @@ use App\Http\Controllers\DOS_ETBController;
 use App\Http\Controllers\DepotController;
 use App\Http\Controllers\VerificationmailController;
 use App\Http\Controllers\PhoneVerificationController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ReglementController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -55,13 +57,14 @@ Route::post("ChiffreAffaire/getCA_ShowRoom", [ChiffreAffaireController::class,'g
 Route::group(['middleware'=>['auth:sanctum']],function(){
     
     Route::post("/verif_password", [AuthController::class, 'passwordverif']);
+    Route::post("ChiffreAffaire/getCA_ShowRoom_detail", [ChiffreAffaireController::class,'getCA_ShowRoom_detail']);
     Route::get("/get_user", [AuthController::class, 'get_user']);
     Route::post("ChiffreAffaire", [ChiffreAffaireController::class,'list']);
     Route::post("ChiffreAffaire/listDetail", [ChiffreAffaireController::class,'list_CA_Detail']);
     Route::get("ChiffreAffaire/get_payeur", [ChiffreAffaireController::class,'get_payeur']);
     Route::post("ChiffreAffaire/CLI_MONT_total", [ChiffreAffaireController::class,'CLI_MONT_total']);
-    
-    Route::post("ChiffreAffaire/getCA_ShowRoom_detail", [ChiffreAffaireController::class,'getCA_ShowRoom_detail']);
+   
+
 
     /******************************************* Etat Stock ******************************************* */
 
@@ -117,6 +120,10 @@ Route::group(['middleware'=>['auth:sanctum']],function(){
 
     Route::post("getDEPO", [DepotController::class,'getDEPO']);
 
+    Route::middleware(['auth', 'check.responsable'])->group(function () {
+        Route::get('/dashboard', 'DashboardController@index');
+    });
+    Route::get('/reglements', [ReglementController::class, 'index'])->middleware('auth:sanctum');
+   
     
-
 });

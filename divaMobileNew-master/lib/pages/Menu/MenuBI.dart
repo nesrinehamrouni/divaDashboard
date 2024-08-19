@@ -1,17 +1,18 @@
 
 import 'dart:io';
-import 'package:divamobile/pages/Filter_Stat/Filter_CA_ShowRoom.dart';
 
-import '../../pages/Filter_Stat/Filter_Stock.dart';
-import '../../pages/Filter_Stat/filterCA.dart';
+import 'package:divamobile/pages/Filter_Stat/Filter_CA_ShowRoom.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../Api.dart';
 import '../../My_globals.dart';
 import '../../constants.dart';
+import '../../pages/Filter_Stat/Filter_Stock.dart';
+import '../../pages/Filter_Stat/filterCA.dart';
 import '../Filter_Stat/Filter_FA.dart';
 import '../Filter_Stat/Filter_RetourART.dart';
 import '../Login/firstScreen.dart';
@@ -28,27 +29,13 @@ class Menu_BI extends StatefulWidget {
 class _MenuState extends State<Menu_BI> {
   final controller = DragSelectGridViewController();
   var taille ;
-  String userRole = '';
 
   @override
   initState()  {
 
     super.initState();
-    getUserRole();
     controller.addListener(scheduleRebuild);
 
-  }
-  Future<void> getUserRole() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      userRole = prefs.getString('userRole') ?? '';
-    });
-    if (userRole != 'admin') {
-      // If not admin, navigate back to Menu
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => Menu())
-      );
-    }
   }
 
   @override
@@ -76,13 +63,6 @@ class _MenuState extends State<Menu_BI> {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    if (userRole != 'admin') {
-      // Return an empty container or loading indicator while navigating back
-      return Container();
-    }
-
-
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
 
@@ -99,7 +79,7 @@ class _MenuState extends State<Menu_BI> {
           ),
           titleSpacing: 20.0,
 
-          title:Text("Tableau de bord"),
+          title:Text("Tableau de bord", style: TextStyle(color: Colors.white,)),
           leading:  IconButton(
             icon:  Icon(Icons.arrow_back,color: Colors.white,),
             onPressed: () {
@@ -352,5 +332,3 @@ class _MenuState extends State<Menu_BI> {
 
 
 }
-
-
