@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:side_sheet/side_sheet.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // Import the constants file
 
@@ -28,7 +27,7 @@ class _ReglementPageState extends State<ReglementPage> {
 
     await SideSheet.right(
       width: MediaQuery.of(context).size.width * 0.8,
-      body: _FilterWidget(),
+      body: _FilterWidget(context),
       context: context,
     );
 
@@ -182,38 +181,103 @@ class _ReglementPageState extends State<ReglementPage> {
     );
   }
 
-  Widget _FilterWidget() {
-    return Scaffold(
-      body: Container(
-        padding: EdgeInsets.fromLTRB(10, 30, 10, 10),
-        child: SingleChildScrollView(
+ Widget _FilterWidget(BuildContext context) {
+  bool searchByClient = true;
+  String searchText = '';
+
+  return Scaffold(
+    body: StatefulBuilder(
+      builder: (BuildContext context, StateSetter setState) {
+        return Container(
+          padding: EdgeInsets.fromLTRB(20, 40, 20, 20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text("Tiers"),
-              SizedBox(height: 5.h),
-              // Replace with your actual dropdown widget
-              DropdownButton<String>(
-                items: <String>['Option 1', 'Option 2'].map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (_) {},
+              Text(
+                "Chercher par :",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
               ),
-              SizedBox(height: 15.h),
-              // More filter widgets here...
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: searchByClient ? kPrimaryColor : Colors.grey,
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        searchByClient = true;
+                        searchText = '';
+                      });
+                    },
+                    child: Text(
+                      'Client',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: !searchByClient ? kPrimaryColor : Colors.grey,
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        searchByClient = false;
+                        searchText = '';
+                      });
+                    },
+                    child: Text(
+                      'Numéro de pièce',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 30),
+              Container(
+                width: MediaQuery.of(context).size.width * 0.8,
+                child: TextField(
+                  decoration: InputDecoration(
+                    labelText: searchByClient ? 'Nom du client' : 'Numéro de pièce',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      searchText = value;
+                    });
+                  },
+                ),
+              ),
+              SizedBox(height: 30),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kPrimaryColor,
+                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                ),
                 onPressed: () {
-                  // Perform the search action
+                  if (searchByClient) {
+                    print('Recherche par client: $searchText');
+                  } else {
+                    print('Recherche par numéro de pièce: $searchText');
+                  }
                   Navigator.pop(context);
                 },
-                child: Text('Rechercher'),
+                child: Text(
+                  'Rechercher',
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
+        );
+      },
+    ),
+  );
+}
 }
