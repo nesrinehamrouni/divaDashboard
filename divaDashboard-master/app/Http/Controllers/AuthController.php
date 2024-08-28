@@ -27,7 +27,7 @@ public function register(Request $request){
           'phone' => 'required|digits:8|unique:users,phone',
           'password' => 'required|min:6|confirmed',
           'profile_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-         'role' => 'required|string|in:Admin,Responsable'
+        'role' => 'required|string|in:Admin,Responsable',
         ]);
 
       Log::info('Validation passed');
@@ -48,7 +48,7 @@ public function register(Request $request){
           'password' => bcrypt($attrs['password']),
           'remember_token' => Str::random(10),
           'profile_image' => $imageUrl ?? null,
-          'role' => $attrs['role'],
+          'role' => $request->role,
       ]);
 
       Log::info('User created successfully: ' . $user->id);
@@ -76,9 +76,9 @@ public function register(Request $request){
   }
 }
 
-    public function login(Request $request)
+public function login(Request $request)
 {
-  Log::info('Login request:', $request->all());
+    Log::info('Login request:', $request->all());
 
     $validator = Validator::make($request->all(), [
         'email' => 'required',
@@ -110,12 +110,17 @@ public function register(Request $request){
     $user = User::where('email', strtoupper($request->email))->first();
     $tokenResult = $user->remember_token;
 
+    // Define the $role variable from the authenticated user
+    $role = $user->role;
+
     return response()->json([
         'status_code' => 200,
         'token' => $tokenResult,
-        'message' => 'Authenticated'
+        'message' => 'Authenticated',
+        'role' => $role
     ]);
 }
+
 
 public function logout(Request $request)
 {

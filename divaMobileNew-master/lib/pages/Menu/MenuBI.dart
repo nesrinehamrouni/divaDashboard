@@ -28,28 +28,17 @@ class Menu_BI extends StatefulWidget {
 class _MenuState extends State<Menu_BI> {
   final controller = DragSelectGridViewController();
   var taille ;
-  String userRole = '';
+ 
 
   @override
   initState()  {
 
     super.initState();
-    getUserRole();
+  
     controller.addListener(scheduleRebuild);
 
   }
-  Future<void> getUserRole() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      userRole = prefs.getString('userRole') ?? '';
-    });
-    if (userRole != 'admin') {
-      // If not admin, navigate back to Menu
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => Menu())
-      );
-    }
-  }
+ 
 
   @override
   void dispose() {
@@ -76,13 +65,6 @@ class _MenuState extends State<Menu_BI> {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    if (userRole != 'admin') {
-      // Return an empty container or loading indicator while navigating back
-      return Container();
-    }
-
-
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
 

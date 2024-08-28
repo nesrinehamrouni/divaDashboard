@@ -52,9 +52,10 @@ Future<void> _login() async {
     if (response.statusCode == 200) {
       if (responseBody['status_code'] == 200) {
         print('Login successful');
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+
         if (responseBody['token'] != null) {
           print('Token received: ${responseBody['token']}');
-          SharedPreferences prefs = await SharedPreferences.getInstance();
           await prefs.setString('auth_token', responseBody['token']);
           await Utils.setToken(responseBody['token']);
           print('Token saved');
@@ -62,31 +63,41 @@ Future<void> _login() async {
           print('No token received in login response');
         }
 
+        // Retrieve the user's role from the response
+        String role = responseBody['role'];
+        await prefs.setString('user_role', role); // Save the role for later use
+
         _showSnackBar('Login successful', Colors.green);
 
-        Navigator.pushReplacementNamed(context, '/Menu');
+        // Navigate to the appropriate menu based on the user's role
+        if (role == 'Admin') {
+          Navigator.pushReplacementNamed(context, '/Menu');
+        } else if (role=='Responsable'){
+          Navigator.pushReplacementNamed(context, '/responsableMenu');
+        }
+        else {
+          print("heloooooooooooooo");
+        }
       } else if (responseBody['status_code'] == 401) {
         print('Login failed: Incorrect email or password');
-      _showSnackBar("Adresse e-mail ou mot de passe incorrect.", Colors.red);
+        _showSnackBar("Adresse e-mail ou mot de passe incorrect.", Colors.red);
       } else if (responseBody['status_code'] == 404) {
         print('Login failed: User does not exist');
         _showSnackBar("L'utilisateur n'existe pas. Vérifiez votre saisie.", Colors.red);
-
       } else {
         print('Login failed with message: ${responseBody['message']}');
         _showSnackBar(responseBody['message'], Colors.red);
-
       }
     } else {
       print('Login failed with status code: ${response.statusCode}');
-        _showSnackBar('Login failed with status code: ${response.statusCode}', Colors.red);
-
+      _showSnackBar('Login failed with status code: ${response.statusCode}', Colors.red);
     }
   } catch (e) {
     print('Login error: $e');
     _showSnackBar('Server error: $e', Colors.red);
-  } 
   }
+}
+
  void _showSnackBar(String message, Color color) {
     final snackBar = SnackBar(
       content: Text(message),

@@ -60,51 +60,49 @@ class _RegistrationPageState extends State<RegistrationPage> {
     }
   }
 
-  void _registerUser() async {
-    if (_image == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Please select a profile image'),
-      ));
-      return;
-    }
-
-    setState(() {
-      loading = true;
-    });
-     print(
-      "selectedRole"
-    );
-
-    String originalPhone = phoneController.text;
-
-    ApiResponse response = await register(
-      nameController.text,
-      prenameController.text,
-      emailController.text,
-      originalPhone,
-      passwordController.text,
-      _image!,
-      selectedRole ?? '',
-    );
-
-    setState(() {
-      loading = false;
-    });
-
-    if (response.error == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-            'Registration successful. Please check your email for verification.'),
-        backgroundColor: Colors.green,
-      ));
-      _navigateToVerificationPage();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('${response.error}'),
-        backgroundColor: Colors.red,
-      ));
-    }
+  Future<void> _registerUser() async {
+  if (_image == null) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Please select a profile image'),
+    ));
+    return;
   }
+
+  setState(() {
+    loading = true;
+  });
+
+  String originalPhone = phoneController.text;
+
+  ApiResponse response = await register(
+    nameController.text,
+    prenameController.text,
+    emailController.text,
+    originalPhone,
+    passwordController.text,
+    _image!,
+    selectedRole ?? '', // Include the role
+  );
+
+  setState(() {
+    loading = false;
+  });
+
+  if (response.error == null) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(
+          'Registration successful. Please check your email for verification.'),
+      backgroundColor: Colors.green,
+    ));
+    _navigateToVerificationPage();
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('${response.error}'),
+      backgroundColor: Colors.red,
+    ));
+  }
+  }
+
 
   void _navigateToVerificationPage() {
     Navigator.of(context).pushReplacement(
@@ -112,6 +110,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
         builder: (context) => VerifyCodePage(
           email: emailController.text,
           verificationCode: verificationCodeController.text,
+             selectedRole: selectedRole ?? ''
+         
         ),
       ),
     );

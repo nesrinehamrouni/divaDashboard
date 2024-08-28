@@ -12,8 +12,8 @@ import 'package:otp_text_field/style.dart';
 class VerifyCodePage extends StatefulWidget {
   final String email;
   final String verificationCode; 
-
-  VerifyCodePage({required this.email, required this.verificationCode});
+   final String selectedRole;
+  VerifyCodePage({required this.email, required this.verificationCode,required this.selectedRole});
 
   @override
   _VerifyCodePageState createState() => _VerifyCodePageState();
@@ -41,6 +41,11 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
       setState(() {
         _pinSuccess = true;
       });
+       if (widget.selectedRole == 'Admin') {
+          Navigator.pushReplacementNamed(context, '/Menu');
+        } else if (widget.selectedRole == 'Responsable') {
+          Navigator.pushReplacementNamed(context, '/responsableMenu');
+        }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Verification failed: ${response.body}')),
@@ -170,10 +175,11 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
                                   ? () {
                                       _verifyCode();
                                       if (_codeController.text == widget.verificationCode) {
-                                        Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(builder: (context) => Menu()),
-                                        );
+                                        if (widget.selectedRole == 'Admin') {
+                                            Navigator.pushReplacementNamed(context, '/Menu');
+                                          } else if (widget.selectedRole == 'Responsable') {
+                                            Navigator.pushReplacementNamed(context, '/responsableMenu');
+                                          }
                                       }
                                     }
                                   : null,
